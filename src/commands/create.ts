@@ -143,14 +143,39 @@ async function configureTemplate(
 
   console.log(chalk.blue(`\n⚙️  Configuring ${templateConfig.name}...`));
   
-  const answers = await inquirer.prompt(templateConfig.prompts);
+  // Filter out prompts that ask for info we already have
+  const filteredPrompts = templateConfig.prompts.filter(prompt => {
+    return !basicInfo.hasOwnProperty(prompt.name);
+  });
+  
+  let answers = {};
+  
+  if (filteredPrompts.length > 0) {
+    try {
+      // Validate prompt structure
+      const validPrompts = filteredPrompts.filter(prompt => {
+        return prompt && typeof prompt === 'object' && prompt.name && prompt.message;
+      });
+      
+      if (validPrompts.length > 0) {
+        answers = await inquirer.prompt(validPrompts);
+      }
+    } catch (error) {
+      console.error(chalk.yellow('⚠️  Error in template prompts, using defaults'));
+      console.error(chalk.gray('Error:', error instanceof Error ? error.message : String(error)));
+    }
+  }
   
   // Handle conditional prompts
   if (templateConfig.conditionalPrompts) {
     for (const [condition, prompts] of Object.entries(templateConfig.conditionalPrompts)) {
-      if (answers[condition]) {
-        const conditionalAnswers = await inquirer.prompt(prompts);
-        Object.assign(answers, conditionalAnswers);
+      if ((answers as any)[condition]) {
+        try {
+          const conditionalAnswers = await inquirer.prompt(prompts);
+          Object.assign(answers, conditionalAnswers);
+        } catch (error) {
+          console.error(chalk.yellow('⚠️  Error in conditional prompts'));
+        }
       }
     }
   }
