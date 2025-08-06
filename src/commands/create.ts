@@ -14,7 +14,8 @@ export async function createCommand(
   templateName?: string,
   options: CreateOptions = {}
 ): Promise<void> {
-  console.log(chalk.blue.bold('🚀 Welcome to Boilerplate Generator!'));
+  console.log(chalk.blue.bold('🚀 ¡Bienvenido a STLabs Start!'));
+  console.log(chalk.gray('Generador de proyectos con templates predefinidos'));
   console.log();
 
   const templateManager = new TemplateManager();
@@ -112,12 +113,43 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
   const templates = await templateManager.getAvailableTemplates();
   spinner.stop();
 
+  // Step 1: Ask for project category
+  const { category } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'category',
+      message: '🎯 ¿Qué tipo de proyecto quieres crear?',
+      choices: [
+        { 
+          name: '🚀 Fullstack - Aplicación completa (frontend + backend)', 
+          value: 'fullstack' 
+        },
+        { 
+          name: '⚙️  Backend - API y servicios', 
+          value: 'backend' 
+        },
+        { 
+          name: '🎨 Frontend - Interfaz de usuario', 
+          value: 'frontend' 
+        }
+      ]
+    }
+  ]);
+
+  // Step 2: Filter templates by category
+  const filteredTemplates = templates.filter(template => template.category === category);
+
+  if (filteredTemplates.length === 0) {
+    throw new Error(`No templates available for category "${category}"`);
+  }
+
+  // Step 3: Show filtered templates
   const { selectedTemplate } = await inquirer.prompt([
     {
       type: 'list',
       name: 'selectedTemplate',
-      message: '🎯 Select a template:',
-      choices: templates.map(template => ({
+      message: `📋 Templates disponibles para ${category}:`,
+      choices: filteredTemplates.map(template => ({
         name: `${template.name} - ${template.description}`,
         value: template.key,
         short: template.name

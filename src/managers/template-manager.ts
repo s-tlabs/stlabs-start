@@ -94,16 +94,16 @@ export class TemplateManager {
         ...template
       }));
     } catch (error) {
-      // Show error instead of fallback templates
+      // Show error and use fallback templates
       console.error('⚠️  Failed to fetch templates from remote repository');
       console.error('Error:', error instanceof Error ? error.message : String(error));
       console.log();
-      console.log('💡 Possible solutions:');
+      console.log('💡 Using default templates...');
       console.log('• Make sure the repository s-tlabs/boilerplates exists');
       console.log('• Create templates.json file in the repository root');
       console.log('• Check GitHub authentication: stlabs-start auth --view');
       console.log('• Verify repository access permissions');
-      return [];
+      return this.getDefaultTemplates();
     }
   }
 

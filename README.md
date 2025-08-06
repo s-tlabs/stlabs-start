@@ -87,11 +87,18 @@ export GH_TOKEN=ghp_your_token_here
 npx stlabs-start
 
 # Create project with specific template
-npx stlabs-start my-app nextjs-shadcn
+npx stlabs-start my-app nextjs-nextauth-postgres
 
 # List available templates
 npx stlabs-start --list
 ```
+
+### Interactive Flow
+
+1. **Select Project Type**: Choose between Fullstack, Backend, or Frontend
+2. **Choose Template**: Select from available templates for your chosen category
+3. **Configure Variables**: Set up project-specific variables
+4. **Generate Project**: Your project is created with all dependencies
 
 ## 📋 Available Commands
 
@@ -105,10 +112,22 @@ npx stlabs-start --list
 
 ## 🎨 Available Templates
 
-Templates are loaded from [s-tlabs/boilerplates](https://github.com/s-tlabs/boilerplates):
+Templates are loaded from [s-tlabs/boilerplates](https://github.com/s-tlabs/boilerplates) and organized by category:
 
-- **nextjs-shadcn** - Next.js + shadcn/ui + Tailwind CSS
-- More templates coming soon...
+### 🚀 Fullstack Templates
+- **nextjs-nextauth-postgres** - Next.js + NextAuth + PostgreSQL
+- **nextjs-clerk-supabase** - Next.js + Clerk + Supabase
+
+### ⚙️ Backend Templates  
+- **nestjs-jwt-postgres** - NestJS + JWT + PostgreSQL
+- **express-mongodb** - Express + MongoDB
+
+### 🎨 Frontend Templates
+- **react-vite-tailwind** - React + Vite + Tailwind CSS
+- **vue-nuxt** - Vue + Nuxt 3
+- **svelte-kit** - SvelteKit
+
+More templates coming soon...
 
 ## Development
 

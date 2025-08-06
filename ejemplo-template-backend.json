@@ -1,0 +1,52 @@
+{
+  "name": "nestjs-jwt-postgres",
+  "prompts": [
+    {
+      "type": "password",
+      "name": "jwtSecret",
+      "message": "🔐 JWT Secret (deja vacío para auto-generar):",
+      "default": ""
+    },
+    {
+      "type": "input",
+      "name": "databaseUrl",
+      "message": "🗄️ Database URL:",
+      "default": "postgresql://user:password@localhost:5432/{{projectName}}",
+      "validate": "databaseUrl"
+    },
+    {
+      "type": "number",
+      "name": "apiPort",
+      "message": "🌐 Puerto del servidor:",
+      "default": 3000,
+      "validate": "port"
+    },
+    {
+      "type": "confirm",
+      "name": "enableSwagger",
+      "message": "📚 ¿Habilitar documentación Swagger?",
+      "default": true
+    },
+    {
+      "type": "confirm",
+      "name": "enableCors",
+      "message": "🌍 ¿Habilitar CORS?",
+      "default": true
+    }
+  ],
+  "conditionalPrompts": {
+    "enableCors": [
+      {
+        "type": "input",
+        "name": "corsOrigins",
+        "message": "🌐 Orígenes CORS (separados por coma):",
+        "default": "http://localhost:3000,http://localhost:3001",
+        "validate": "required"
+      }
+    ]
+  },
+  "generatedVars": {
+    "apiPrefix": "/api/v1",
+    "jwtSecret": "{{#unless jwtSecret}}{{randomString 32}}{{else}}{{jwtSecret}}{{/unless}}"
+  }
+} 

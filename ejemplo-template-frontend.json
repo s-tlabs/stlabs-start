@@ -1,0 +1,65 @@
+{
+  "name": "react-vite-tailwind",
+  "prompts": [
+    {
+      "type": "input",
+      "name": "apiBaseUrl",
+      "message": "🌐 URL base de la API (opcional):",
+      "default": "http://localhost:3000/api",
+      "validate": "url"
+    },
+    {
+      "type": "confirm",
+      "name": "includeTypeScript",
+      "message": "📝 ¿Incluir TypeScript?",
+      "default": true
+    },
+    {
+      "type": "confirm",
+      "name": "includeTailwind",
+      "message": "🎨 ¿Incluir Tailwind CSS?",
+      "default": true
+    },
+    {
+      "type": "confirm",
+      "name": "includeESLint",
+      "message": "🔍 ¿Incluir ESLint?",
+      "default": true
+    },
+    {
+      "type": "confirm",
+      "name": "includePrettier",
+      "message": "✨ ¿Incluir Prettier?",
+      "default": true
+    }
+  ],
+  "conditionalPrompts": {
+    "includeTypeScript": [
+      {
+        "type": "confirm",
+        "name": "strictMode",
+        "message": "🔒 ¿Habilitar modo estricto de TypeScript?",
+        "default": true
+      }
+    ],
+    "includeTailwind": [
+      {
+        "type": "confirm",
+        "name": "includeForms",
+        "message": "📝 ¿Incluir plugin de formularios de Tailwind?",
+        "default": true
+      },
+      {
+        "type": "confirm",
+        "name": "includeTypography",
+        "message": "📖 ¿Incluir plugin de tipografía de Tailwind?",
+        "default": true
+      }
+    ]
+  },
+  "generatedVars": {
+    "projectType": "frontend",
+    "framework": "react",
+    "bundler": "vite"
+  }
+} 

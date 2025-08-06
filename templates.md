@@ -2,6 +2,21 @@
 
 Esta guía explica cómo crear templates para `stlabs-start` en el repositorio `s-tlabs/boilerplates`.
 
+## 🎯 Flujo de Selección de Templates
+
+Cuando un usuario ejecuta `stlabs-start create`, el flujo es el siguiente:
+
+1. **Selección de Categoría**: Primero se pregunta qué tipo de proyecto desea construir:
+   - `fullstack`: Aplicaciones completas con frontend y backend integrados
+   - `backend`: APIs y servicios backend
+   - `frontend`: Aplicaciones de interfaz de usuario
+
+2. **Filtrado de Templates**: Se muestran solo los templates que corresponden a la categoría seleccionada
+
+3. **Selección de Template**: El usuario elige el template específico de la categoría
+
+4. **Configuración**: Se solicitan las variables específicas del template elegido
+
 ## 📁 Estructura del Repositorio
 
 ```
@@ -99,7 +114,10 @@ Este archivo contiene la metadata de todos los templates disponibles:
 
 - **name**: Nombre descriptivo del template
 - **description**: Descripción breve de qué hace
-- **category**: `fullstack`, `backend`, `frontend`
+- **category**: **OBLIGATORIO** - Define el tipo de proyecto:
+  - `fullstack`: Aplicaciones completas con frontend y backend integrados (Next.js, Nuxt, etc.)
+  - `backend`: APIs y servicios backend (Express, NestJS, FastAPI, etc.)
+  - `frontend`: Aplicaciones de interfaz de usuario (React, Vue, Svelte, etc.)
 - **stack**: Array de tecnologías utilizadas
 - **features**: Array de características principales
 - **variables**: 
@@ -108,6 +126,29 @@ Este archivo contiene la metadata de todos los templates disponibles:
   - `generated`: Variables generadas automáticamente
 - **supports**: Funcionalidades que soporta el template
 - **postInstall**: Comandos a ejecutar después de la generación
+
+## 🏷️ Categorías de Templates
+
+### Fullstack (`fullstack`)
+Templates que incluyen tanto frontend como backend en una sola aplicación:
+- **Next.js + NextAuth + PostgreSQL**: Aplicación completa con autenticación y base de datos
+- **Next.js + Clerk + Supabase**: Stack moderno con auth y backend como servicio
+- **Nuxt + Prisma + PostgreSQL**: Aplicación Vue fullstack con base de datos
+- **SvelteKit + Supabase**: Aplicación Svelte completa con backend
+
+### Backend (`backend`)
+Templates para APIs y servicios backend:
+- **NestJS + JWT + PostgreSQL**: API robusta con autenticación JWT
+- **Express + MongoDB**: API simple con MongoDB
+- **FastAPI + PostgreSQL**: API Python con FastAPI
+- **Laravel + MySQL**: API PHP con Laravel
+
+### Frontend (`frontend`)
+Templates para aplicaciones de interfaz de usuario:
+- **React + Vite + Tailwind**: Frontend moderno con React
+- **Vue + Nuxt 3**: Aplicación Vue con SSR
+- **SvelteKit**: Aplicación Svelte con routing
+- **Angular + Material**: Aplicación Angular con Material Design
 
 ## ⚙️ Archivo `template.json` (Específico por template)
 
@@ -533,11 +574,58 @@ Descripción por defecto
 
 ## 🚨 Consejos importantes
 
-1. **Nombres consistentes**: Usa nombres de variables consistentes entre `templates.json` y `template.json`
-2. **Validación**: Always validate user inputs with appropriate validators
-3. **Defaults sensatos**: Provide reasonable defaults for optional fields
-4. **Documentación**: Include clear documentation in README.md.hbs
-5. **Testing**: Test your templates thoroughly before publishing
-6. **Versionado**: Keep templates.json version updated when making changes
+1. **Categoría obligatoria**: Siempre incluye la propiedad `category` en cada template
+2. **Nombres consistentes**: Usa nombres de variables consistentes entre `templates.json` y `template.json`
+3. **Validación**: Always validate user inputs with appropriate validators
+4. **Defaults sensatos**: Provide reasonable defaults for optional fields
+5. **Documentación**: Include clear documentation in README.md.hbs
+6. **Testing**: Test your templates thoroughly before publishing
+7. **Versionado**: Keep templates.json version updated when making changes
+
+## 💻 Implementación del Flujo de Selección
+
+Para implementar el flujo de selección por categorías en tu CLI, puedes usar este patrón:
+
+```typescript
+// 1. Preguntar por categoría
+const category = await prompt({
+  type: 'list',
+  name: 'category',
+  message: '¿Qué tipo de proyecto quieres crear?',
+  choices: [
+    { name: 'Fullstack - Aplicación completa (frontend + backend)', value: 'fullstack' },
+    { name: 'Backend - API y servicios', value: 'backend' },
+    { name: 'Frontend - Interfaz de usuario', value: 'frontend' }
+  ]
+});
+
+// 2. Filtrar templates por categoría
+const filteredTemplates = Object.entries(templates)
+  .filter(([_, template]) => template.category === category)
+  .map(([key, template]) => ({
+    name: template.name,
+    value: key,
+    description: template.description
+  }));
+
+// 3. Mostrar templates filtrados
+const selectedTemplate = await prompt({
+  type: 'list',
+  name: 'template',
+  message: `Templates disponibles para ${category}:`,
+  choices: filteredTemplates
+});
+```
+
+## 📁 Ejemplos de Templates por Categoría
+
+### Fullstack Template
+Ver `ejemplo-template-fullstack.json` para un template completo de Next.js con autenticación.
+
+### Backend Template  
+Ver `ejemplo-template-backend.json` para un template de NestJS con JWT y base de datos.
+
+### Frontend Template
+Ver `ejemplo-template-frontend.json` para un template de React con Vite y Tailwind.
 
 ¡Con esta estructura puedes crear templates robustos y reutilizables para `stlabs-start`!
