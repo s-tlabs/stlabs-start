@@ -19,8 +19,14 @@ export class GitHubManager {
 
     try {
       // Download template files recursively
+      console.log(`🔍 Attempting to download from: ${templateUrl}`);
       await this.downloadDirectory(templateUrl, projectPath);
+      console.log('✅ Template downloaded successfully');
     } catch (error) {
+      console.error('❌ Failed to download template from GitHub');
+      console.error('Error:', error instanceof Error ? error.message : String(error));
+      console.log(`🔄 Using fallback template for: ${templateName}`);
+      
       // Fallback: use local template if available or create basic structure
       await this.createBasicTemplate(projectPath, templateName);
     }
@@ -35,8 +41,16 @@ export class GitHubManager {
 
   private async downloadDirectory(apiUrl: string, targetPath: string): Promise<void> {
     const headers = await this.authManager.getAuthHeaders();
+    console.log(`📡 Fetching directory: ${apiUrl}`);
+    console.log(`🔑 Auth headers: ${Object.keys(headers).length > 2 ? 'Authenticated' : 'Anonymous'}`);
+    
     const response = await axios.get(apiUrl, { headers });
     const items = response.data;
+    
+    console.log(`📁 Found ${items.length} items in directory`);
+    items.forEach((item: any) => {
+      console.log(`  ${item.type === 'dir' ? '📁' : '📄'} ${item.name}`);
+    });
 
     for (const item of items) {
       const itemPath = path.join(targetPath, item.name);
