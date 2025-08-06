@@ -29,6 +29,11 @@ export async function createCommand(
     // Step 2: Select template
     const selectedTemplate = await selectTemplate(templateManager, templateName);
     
+    // Handle back option from template selection
+    if (!selectedTemplate) {
+      return;
+    }
+    
     // Step 3: Configure template variables
     const templateConfig = await configureTemplate(templateManager, selectedTemplate, basicInfo);
     
@@ -131,16 +136,44 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
         { 
           name: '🎨 Frontend - Interfaz de usuario', 
           value: 'frontend' 
+        },
+        { 
+          name: '⬅️  Volver atrás', 
+          value: 'back' 
         }
       ]
     }
   ]);
 
+  // Handle back option
+  if (category === 'back') {
+    console.log(chalk.yellow('👋 ¡Hasta luego!'));
+    return;
+  }
+
   // Step 2: Filter templates by category
   const filteredTemplates = templates.filter(template => template.category === category);
 
   if (filteredTemplates.length === 0) {
-    throw new Error(`No templates available for category "${category}"`);
+    console.log(chalk.red(`❌ No hay templates disponibles para la categoría "${category}"`));
+    console.log(chalk.yellow('💡 Intenta con otra categoría o verifica la conexión a internet.'));
+    
+    // Ask if user wants to go back
+    const { goBack } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'goBack',
+        message: '¿Quieres volver a seleccionar categoría?',
+        default: true
+      }
+    ]);
+    
+    if (goBack) {
+      return await selectTemplate(templateManager, templateName);
+    } else {
+      console.log(chalk.yellow('👋 ¡Hasta luego!'));
+      return;
+    }
   }
 
   // Step 3: Show filtered templates
@@ -149,13 +182,24 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
       type: 'list',
       name: 'selectedTemplate',
       message: `📋 Templates disponibles para ${category}:`,
-      choices: filteredTemplates.map(template => ({
-        name: `${template.name} - ${template.description}`,
-        value: template.key,
-        short: template.name
-      }))
+      choices: [
+        ...filteredTemplates.map(template => ({
+          name: `${template.name} - ${template.description}`,
+          value: template.key,
+          short: template.name
+        })),
+        {
+          name: '⬅️  Volver a seleccionar categoría',
+          value: 'back'
+        }
+      ]
     }
   ]);
+
+  // Handle back option
+  if (selectedTemplate === 'back') {
+    return await selectTemplate(templateManager, templateName);
+  }
 
   return selectedTemplate;
 }
@@ -174,6 +218,21 @@ async function configureTemplate(
   }
 
   console.log(chalk.blue(`\n⚙️  Configuring ${templateConfig.name}...`));
+  
+  // Add option to go back to template selection
+  const { continueConfig } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'continueConfig',
+      message: '¿Continuar con la configuración del template?',
+      default: true
+    }
+  ]);
+  
+  if (!continueConfig) {
+    console.log(chalk.yellow('👋 ¡Hasta luego!'));
+    return;
+  }
   
   // Filter out prompts that ask for info we already have
   const filteredPrompts = templateConfig.prompts.filter(prompt => {
