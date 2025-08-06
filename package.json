@@ -1,6 +1,6 @@
 {
   "name": "stlabs-start",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "CLI tool for generating projects with predefined boilerplates",
   "homepage": "https://github.com/s-tlabs/stlabs-start#readme",
   "main": "dist/index.js",
