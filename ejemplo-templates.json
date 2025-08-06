@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "templates": {
+    "nextjs-basic": {
+      "name": "Next.js Básico",
+      "description": "Proyecto Next.js con TypeScript y Tailwind",
+      "category": "frontend",
+      "stack": ["nextjs", "typescript", "tailwind"],
+      "features": ["SSR", "TypeScript", "Tailwind CSS"],
+      "variables": {
+        "required": [],
+        "optional": ["apiBaseUrl"],
+        "generated": []
+      },
+      "supports": ["hot-reload"],
+      "postInstall": ["npm install"]
+    },
+    "react-vite-ts": {
+      "name": "React + Vite + TypeScript",
+      "description": "Proyecto React moderno con Vite y TypeScript",
+      "category": "frontend", 
+      "stack": ["react", "vite", "typescript"],
+      "features": ["Fast HMR", "TypeScript", "ESLint"],
+      "variables": {
+        "required": [],
+        "optional": [],
+        "generated": []
+      },
+      "supports": ["hot-reload"],
+      "postInstall": ["npm install"]
+    }
+  }
+}

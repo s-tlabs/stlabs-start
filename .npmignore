@@ -1,0 +1,35 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+tsconfig.json
+
+# Development files
+.env
+.env.*
+test-repo.js
+ejemplo-templates.json
+
+# Cache and temp
+.templates-cache/
+.temp/
+node_modules/
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+*.lcov
+.jest/
+
+# Build artifacts (keep dist for publishing)
+# dist/ - We NEED this for the CLI to work
