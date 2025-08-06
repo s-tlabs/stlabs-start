@@ -1,5 +1,13 @@
 # STLabs Start
 
+[![NPM Version](https://img.shields.io/npm/v/stlabs-start.svg)](https://www.npmjs.com/package/stlabs-start)
+[![NPM Downloads](https://img.shields.io/npm/dm/stlabs-start.svg)](https://www.npmjs.com/package/stlabs-start)
+[![GitHub License](https://img.shields.io/github/license/s-tlabs/stlabs-start.svg)](https://github.com/s-tlabs/stlabs-start/blob/main/LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/s-tlabs/stlabs-start.svg)](https://github.com/s-tlabs/stlabs-start/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/s-tlabs/stlabs-start.svg)](https://github.com/s-tlabs/stlabs-start/issues)
+[![Node.js Version](https://img.shields.io/node/v/stlabs-start.svg)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org)
+
 A CLI tool for generating projects with predefined boilerplates, downloading templates from GitHub and configuring variables automatically based on the selected stack.
 
 ## Features
@@ -72,12 +80,35 @@ export GITHUB_TOKEN=ghp_your_token_here
 export GH_TOKEN=ghp_your_token_here
 ```
 
-## Available Templates
+## 🎯 Quick Start
 
-- **nextjs-nextauth-postgres** - Next.js + NextAuth + PostgreSQL
-- **nextjs-clerk-supabase** - Next.js + Clerk + Supabase  
-- **nestjs-jwt-postgres** - NestJS + JWT + PostgreSQL
-- **react-vite-tailwind** - React + Vite + Tailwind CSS
+```bash
+# Create a new project interactively
+npx stlabs-start
+
+# Create project with specific template
+npx stlabs-start my-app nextjs-shadcn
+
+# List available templates
+npx stlabs-start --list
+```
+
+## 📋 Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `stlabs-start [project] [template]` | Create new project |
+| `stlabs-start --list` | List available templates |
+| `stlabs-start --info <template>` | Show template details |
+| `stlabs-start --update` | Update template cache |
+| `stlabs-start auth` | Configure GitHub authentication |
+
+## 🎨 Available Templates
+
+Templates are loaded from [s-tlabs/boilerplates](https://github.com/s-tlabs/boilerplates):
+
+- **nextjs-shadcn** - Next.js + shadcn/ui + Tailwind CSS
+- More templates coming soon...
 
 ## Development
 
@@ -130,6 +161,40 @@ You can provide a configuration file to skip interactive prompts:
 }
 ```
 
-## License
+## 🤝 Contributing
 
-MIT
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 Creating Templates
+
+See [templates.md](./templates.md) for detailed instructions on creating your own templates.
+
+## 🐛 Issues & Support
+
+- 🐛 [Report bugs](https://github.com/s-tlabs/stlabs-start/issues)
+- 💬 [Ask questions](https://github.com/s-tlabs/stlabs-start/discussions)
+- 💡 [Request features](https://github.com/s-tlabs/stlabs-start/issues/new)
+
+## 📊 Stats
+
+[![NPM Downloads](https://img.shields.io/npm/dt/stlabs-start.svg)](https://www.npmjs.com/package/stlabs-start)
+[![GitHub Contributors](https://img.shields.io/github/contributors/s-tlabs/stlabs-start.svg)](https://github.com/s-tlabs/stlabs-start/graphs/contributors)
+[![Last Commit](https://img.shields.io/github/last-commit/s-tlabs/stlabs-start.svg)](https://github.com/s-tlabs/stlabs-start/commits/main)
+
+## 📄 License
+
+MIT © [STLabs](https://github.com/s-tlabs)
+
+---
+
+<div align="center">
+  <strong>Made with ❤️ by STLabs</strong>
+  <br>
+  <sub>Built with Claude Code</sub>
+</div>
