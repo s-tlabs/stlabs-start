@@ -51,16 +51,16 @@ export class GitHubManager {
       console.log(`  ${item.type === 'dir' ? '📁' : '📄'} ${item.name}`);
     });
     
-    // Filter out files that should be skipped
-    const validItems = items.filter((item: any) => !this.shouldSkipFile(item.name));
+    // No filtering - copy everything
+    const validItems = items;
     
-    console.log(`📥 Will download ${validItems.length} items after filtering`);
+    console.log(`📥 Will download ${validItems.length} items`);
     validItems.forEach((item: any) => {
       console.log(`  ✅ ${item.type === 'dir' ? '📁' : '📄'} ${item.name}`);
     });
     
     if (validItems.length === 0) {
-      console.log('⚠️  No items to download after filtering');
+      console.log('⚠️  No items to download');
       return;
     }
 
