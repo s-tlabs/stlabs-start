@@ -73,7 +73,9 @@ export class GitHubManager {
 
       if (item.type === 'file') {
         // Download file content
+        const headers = await this.authManager.getAuthHeaders();
         const fileResponse = await axios.get(item.download_url, { 
+          headers,
           responseType: 'arraybuffer' 
         });
         await fs.writeFile(itemPath, fileResponse.data);
@@ -82,6 +84,9 @@ export class GitHubManager {
         // Update progress
         const progress = Math.round((downloadedCount / totalFiles) * 100);
         process.stdout.write(`\r📥 Downloading files... ${progress}% (${downloadedCount}/${totalFiles})`);
+        
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
       } else if (item.type === 'dir') {
         // Create directory and recursively download contents
         await fs.ensureDir(itemPath);
@@ -105,10 +110,15 @@ export class GitHubManager {
 
       if (item.type === 'file') {
         // Download file content
+        const headers = await this.authManager.getAuthHeaders();
         const fileResponse = await axios.get(item.download_url, { 
+          headers,
           responseType: 'arraybuffer' 
         });
         await fs.writeFile(itemPath, fileResponse.data);
+        
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
       } else if (item.type === 'dir') {
         // Create directory and recursively download contents
         await fs.ensureDir(itemPath);
