@@ -40,6 +40,9 @@ export async function createCommand(
     // Step 4: Generate project
     await generateProject(githubManager, selectedTemplate, templateConfig);
     
+    // Step 5: Clean up CLI artifacts
+    await cleanupCliArtifacts();
+    
     console.log();
     console.log(chalk.green.bold('✅ Project created successfully!'));
     console.log(chalk.yellow('📁 Next steps:'));
@@ -297,5 +300,33 @@ async function generateProject(
   } catch (error) {
     spinner.fail('Failed to generate project');
     throw error;
+  }
+}
+
+async function cleanupCliArtifacts(): Promise<void> {
+  const fs = require('fs-extra');
+  const path = require('path');
+  const currentDir = process.cwd();
+  
+  const artifactsToRemove = [
+    'node_modules',
+    'package.json',
+    'package-lock.json',
+    'yarn.lock',
+    'pnpm-lock.yaml',
+    '.npmrc',
+    '.nvmrc',
+    '.node-version'
+  ];
+  
+  for (const artifact of artifactsToRemove) {
+    const artifactPath = path.join(currentDir, artifact);
+    try {
+      if (await fs.pathExists(artifactPath)) {
+        await fs.remove(artifactPath);
+      }
+    } catch (error) {
+      // Silently ignore cleanup errors
+    }
   }
 }
