@@ -3,7 +3,7 @@ import path from 'path';
 import Handlebars from 'handlebars';
 import { promises as fsPromises } from 'fs';
 import { AuthManager } from './auth-manager';
-const download = require('download-git-repo');
+import axios from 'axios';
 
 export class GitHubManager {
   private templatesRepo = 's-tlabs/boilerplates';
@@ -11,60 +11,18 @@ export class GitHubManager {
 
   async downloadTemplate(templateName: string, projectName: string): Promise<void> {
     const projectPath = path.join(process.cwd(), projectName);
-    const tempPath = path.join(process.cwd(), '.temp-' + Date.now());
     
     try {
       console.log(`🔍 Downloading template ${templateName}...`);
       
-      // Get authentication for private repository access
+      // Get authentication headers
       const authHeaders = await this.authManager.getAuthHeaders();
-      const token = authHeaders.Authorization?.replace('token ', '');
       
-      // Construct the repository URL with authentication
-      const repoUrl = token 
-        ? `github:${this.templatesRepo}#main`
-        : `${this.templatesRepo}#main`;
-      
-      // Download entire repository to temp directory
-      await new Promise((resolve, reject) => {
-        const options = token ? { 
-          clone: false,
-          headers: {
-            'Authorization': `token ${token}`,
-            'User-Agent': 'stlabs-start'
-          }
-        } : { clone: false };
-        
-        download(repoUrl, tempPath, options, (err: any) => {
-          if (err) reject(err);
-          else resolve(undefined);
-        });
-      });
-      
-      // Check if the specific template subdirectory exists
-      const templateSourcePath = path.join(tempPath, templateName);
-      
-      if (!(await fs.pathExists(templateSourcePath))) {
-        await fs.remove(tempPath);
-        throw new Error(`Template directory '${templateName}' not found in repository`);
-      }
-      
-      // Copy the specific template directory to the project path
-      await fs.ensureDir(projectPath);
-      await fs.copy(templateSourcePath, projectPath);
-      
-      // Clean up temp directory
-      await fs.remove(tempPath);
+      // Download template directory using GitHub API
+      await this.downloadDirectoryFromGitHub(templateName, projectPath, authHeaders);
       
       console.log('✅ Template downloaded successfully');
     } catch (error) {
-      // Clean up temp directory on error
-      try {
-        await fs.remove(tempPath);
-      } catch (cleanupError) {
-        // Ignore cleanup errors
-      }
-      
       console.error('❌ Failed to download template from GitHub');
       console.error('Error:', error instanceof Error ? error.message : String(error));
       console.log();
@@ -74,6 +32,82 @@ export class GitHubManager {
       console.log('• Try a different template from the available list');
       
       throw new Error(`Template '${templateName}' not found or not accessible. Please check the repository and try again.`);
+    }
+  }
+
+  private async downloadDirectoryFromGitHub(
+    directoryPath: string, 
+    targetPath: string, 
+    authHeaders: any
+  ): Promise<void> {
+    // API URL for the directory contents
+    const apiUrl = `https://api.github.com/repos/${this.templatesRepo}/contents/${directoryPath}`;
+    
+    // Configure axios with authentication
+    const axiosConfig = {
+      headers: {
+        ...authHeaders,
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'stlabs-start-cli'
+      }
+    };
+
+    try {
+      // Get directory contents
+      const response = await axios.get(apiUrl, axiosConfig);
+      const items = response.data;
+
+      if (!Array.isArray(items)) {
+        throw new Error(`'${directoryPath}' is not a directory`);
+      }
+
+      // Ensure target directory exists
+      await fs.ensureDir(targetPath);
+      
+      console.log(`📁 Found ${items.length} items in ${directoryPath}`);
+
+      // Download each item
+      for (const item of items) {
+        const itemPath = path.join(targetPath, item.name);
+        
+        if (item.type === 'file') {
+          console.log(`📄 Downloading ${item.name}...`);
+          await this.downloadFileFromGitHub(item.download_url, itemPath, axiosConfig);
+        } else if (item.type === 'dir') {
+          console.log(`📁 Processing directory ${item.name}...`);
+          await this.downloadDirectoryFromGitHub(
+            `${directoryPath}/${item.name}`, 
+            itemPath, 
+            authHeaders
+          );
+        }
+      }
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new Error(`Template directory '${directoryPath}' not found in repository`);
+      }
+      throw error;
+    }
+  }
+
+  private async downloadFileFromGitHub(
+    downloadUrl: string, 
+    targetPath: string, 
+    axiosConfig: any
+  ): Promise<void> {
+    try {
+      const response = await axios.get(downloadUrl, {
+        ...axiosConfig,
+        responseType: 'arraybuffer'
+      });
+      
+      await fs.writeFile(targetPath, response.data);
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        console.warn(`⚠️  File not accessible: ${downloadUrl}`);
+        return;
+      }
+      throw new Error(`Failed to download file: ${error.message}`);
     }
   }
 
