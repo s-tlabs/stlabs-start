@@ -25,10 +25,14 @@ export class GitHubManager {
     } catch (error) {
       console.error('❌ Failed to download template from GitHub');
       console.error('Error:', error instanceof Error ? error.message : String(error));
-      console.log(`🔄 Using fallback template for: ${templateName}`);
+      console.log();
+      console.log('💡 Troubleshooting tips:');
+      console.log('• Verify the template exists in the repository');
+      console.log('• Check GitHub authentication: stlabs-start auth --view');
+      console.log('• Ensure repository access permissions');
+      console.log('• Try a different template from the available list');
       
-      // Fallback: use local template if available or create basic structure
-      await this.createBasicTemplate(projectPath, templateName);
+      throw new Error(`Template '${templateName}' not found or not accessible. Please check the repository and try again.`);
     }
   }
 
@@ -57,7 +61,9 @@ export class GitHubManager {
 
       if (item.type === 'file') {
         // Download file content
-        const fileResponse = await axios.get(item.download_url);
+        const fileResponse = await axios.get(item.download_url, { 
+          responseType: 'arraybuffer' 
+        });
         await fs.writeFile(itemPath, fileResponse.data);
       } else if (item.type === 'dir') {
         // Create directory and recursively download contents
