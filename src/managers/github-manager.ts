@@ -2,10 +2,12 @@ import fs from 'fs-extra';
 import path from 'path';
 import Handlebars from 'handlebars';
 import { promises as fsPromises } from 'fs';
+import { AuthManager } from './auth-manager';
 const degit = require('degit');
 
 export class GitHubManager {
   private templatesRepo = 's-tlabs/boilerplates';
+  private authManager = new AuthManager();
 
   async downloadTemplate(templateName: string, projectName: string): Promise<void> {
     const projectPath = path.join(process.cwd(), projectName);
@@ -14,12 +16,22 @@ export class GitHubManager {
     try {
       console.log(`🔍 Downloading template ${templateName}...`);
       
-      // First, download the entire repository to a temp directory
-      const emitter = degit(this.templatesRepo, {
+      // Get authentication headers for private repository access
+      const authHeaders = await this.authManager.getAuthHeaders();
+      const token = authHeaders.Authorization?.replace('token ', '');
+      
+      // Configure degit with authentication for private repositories
+      const degitSource = token ? `${this.templatesRepo}#main` : this.templatesRepo;
+      const emitter = degit(degitSource, {
         cache: false,
         force: true,
         verbose: false
       });
+      
+      // Set GitHub token for private repository access
+      if (token) {
+        process.env.GITHUB_TOKEN = token;
+      }
 
       await emitter.clone(tempPath);
       
