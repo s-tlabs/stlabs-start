@@ -9,6 +9,22 @@ export class GitHubManager {
   private templatesRepo = 's-tlabs/boilerplates';
   private authManager = new AuthManager();
 
+  private async retryRequest(requestFn: () => Promise<any>, maxRetries = 3, baseDelay = 1000): Promise<any> {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await requestFn();
+      } catch (error: any) {
+        if (error.response?.status === 429 && attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+          console.log(`\n⏳ Rate limited. Retrying in ${delay/1000}s... (${attempt + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          throw error;
+        }
+      }
+    }
+  }
+
   async downloadTemplate(templateName: string, projectName: string): Promise<void> {
     const templateUrl = `https://api.github.com/repos/${this.templatesRepo}/contents/${templateName}`;
     const projectPath = path.join(process.cwd(), projectName);
@@ -43,7 +59,7 @@ export class GitHubManager {
   private async downloadDirectoryWithProgress(apiUrl: string, targetPath: string): Promise<void> {
     const headers = await this.authManager.getAuthHeaders();
     
-    const response = await axios.get(apiUrl, { headers });
+    const response = await this.retryRequest(() => axios.get(apiUrl, { headers }));
     const items = response.data;
     
     console.log(`🔍 Found ${items.length} items in template`);
@@ -72,12 +88,14 @@ export class GitHubManager {
       const itemPath = path.join(targetPath, item.name);
 
       if (item.type === 'file') {
-        // Download file content
+        // Download file content with retry logic
         const headers = await this.authManager.getAuthHeaders();
-        const fileResponse = await axios.get(item.download_url, { 
-          headers,
-          responseType: 'arraybuffer' 
-        });
+        const fileResponse = await this.retryRequest(() => 
+          axios.get(item.download_url, { 
+            headers,
+            responseType: 'arraybuffer' 
+          })
+        );
         await fs.writeFile(itemPath, fileResponse.data);
         downloadedCount++;
         
@@ -85,8 +103,8 @@ export class GitHubManager {
         const progress = Math.round((downloadedCount / totalFiles) * 100);
         process.stdout.write(`\r📥 Downloading files... ${progress}% (${downloadedCount}/${totalFiles})`);
         
-        // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Increased delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 300));
       } else if (item.type === 'dir') {
         // Create directory and recursively download contents
         await fs.ensureDir(itemPath);
@@ -102,23 +120,25 @@ export class GitHubManager {
   private async downloadDirectorySilent(apiUrl: string, targetPath: string): Promise<void> {
     const headers = await this.authManager.getAuthHeaders();
     
-    const response = await axios.get(apiUrl, { headers });
+    const response = await this.retryRequest(() => axios.get(apiUrl, { headers }));
     const items = response.data;
 
     for (const item of items) {
       const itemPath = path.join(targetPath, item.name);
 
       if (item.type === 'file') {
-        // Download file content
+        // Download file content with retry logic
         const headers = await this.authManager.getAuthHeaders();
-        const fileResponse = await axios.get(item.download_url, { 
-          headers,
-          responseType: 'arraybuffer' 
-        });
+        const fileResponse = await this.retryRequest(() =>
+          axios.get(item.download_url, { 
+            headers,
+            responseType: 'arraybuffer' 
+          })
+        );
         await fs.writeFile(itemPath, fileResponse.data);
         
-        // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Increased delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 300));
       } else if (item.type === 'dir') {
         // Create directory and recursively download contents
         await fs.ensureDir(itemPath);
