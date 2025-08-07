@@ -173,10 +173,9 @@ export class GitHubManager {
   }
 
   private shouldSkipFile(fileName: string): boolean {
-    // Only skip node_modules and git files
+    // Only skip git files, allow everything else from template
     const skipFiles = [
-      '.git',
-      'node_modules'
+      '.git'
     ];
 
     return skipFiles.includes(fileName);
