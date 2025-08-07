@@ -55,8 +55,6 @@ export class TemplateManager {
 
       // Fetch from remote
       const headers = await this.authManager.getAuthHeaders();
-      console.log('🔍 Fetching templates from:', this.templatesUrl);
-      console.log('🔑 Using headers:', Object.keys(headers).length > 2 ? 'Authenticated' : 'Anonymous');
       
       let templatesData;
       

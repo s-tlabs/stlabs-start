@@ -18,9 +18,7 @@ export class GitHubManager {
 
     try {
       // Download template files recursively
-      console.log(`🔍 Attempting to download from: ${templateUrl}`);
-      await this.downloadDirectory(templateUrl, projectPath);
-      console.log('✅ Template downloaded successfully');
+      await this.downloadDirectoryWithProgress(templateUrl, projectPath);
     } catch (error) {
       console.error('❌ Failed to download template from GitHub');
       console.error('Error:', error instanceof Error ? error.message : String(error));
@@ -42,26 +40,59 @@ export class GitHubManager {
     await this.processDirectory(projectDir, variables);
   }
 
-  private async downloadDirectory(apiUrl: string, targetPath: string): Promise<void> {
+  private async downloadDirectoryWithProgress(apiUrl: string, targetPath: string): Promise<void> {
     const headers = await this.authManager.getAuthHeaders();
-    console.log(`📡 Fetching directory: ${apiUrl}`);
-    console.log(`🔑 Auth headers: ${Object.keys(headers).length > 2 ? 'Authenticated' : 'Anonymous'}`);
     
     const response = await axios.get(apiUrl, { headers });
     const items = response.data;
     
-    console.log(`📁 Found ${items.length} items in directory`);
-    items.forEach((item: any) => {
-      console.log(`  ${item.type === 'dir' ? '📁' : '📄'} ${item.name}`);
-    });
+    // Filter out files that should be skipped
+    const validItems = items.filter((item: any) => !this.shouldSkipFile(item.name));
+    
+    if (validItems.length === 0) {
+      return;
+    }
 
-    for (const item of items) {
-      // Skip files that shouldn't be copied
-      if (this.shouldSkipFile(item.name)) {
-        console.log(`  ⏭️  Skipping: ${item.name}`);
-        continue;
+    // Create a simple progress indicator
+    let downloadedCount = 0;
+    const totalFiles = validItems.length;
+    
+    for (const item of validItems) {
+      const itemPath = path.join(targetPath, item.name);
+
+      if (item.type === 'file') {
+        // Download file content
+        const fileResponse = await axios.get(item.download_url, { 
+          responseType: 'arraybuffer' 
+        });
+        await fs.writeFile(itemPath, fileResponse.data);
+        downloadedCount++;
+        
+        // Update progress
+        const progress = Math.round((downloadedCount / totalFiles) * 100);
+        process.stdout.write(`\r📥 Downloading files... ${progress}% (${downloadedCount}/${totalFiles})`);
+      } else if (item.type === 'dir') {
+        // Create directory and recursively download contents
+        await fs.ensureDir(itemPath);
+        await this.downloadDirectorySilent(item.url, itemPath);
       }
+    }
+    
+    // Clear the progress line and show completion
+    process.stdout.write('\r');
+    console.log('✅ Template downloaded successfully');
+  }
 
+  private async downloadDirectorySilent(apiUrl: string, targetPath: string): Promise<void> {
+    const headers = await this.authManager.getAuthHeaders();
+    
+    const response = await axios.get(apiUrl, { headers });
+    const items = response.data;
+    
+    // Filter out files that should be skipped
+    const validItems = items.filter((item: any) => !this.shouldSkipFile(item.name));
+
+    for (const item of validItems) {
       const itemPath = path.join(targetPath, item.name);
 
       if (item.type === 'file') {
@@ -73,7 +104,7 @@ export class GitHubManager {
       } else if (item.type === 'dir') {
         // Create directory and recursively download contents
         await fs.ensureDir(itemPath);
-        await this.downloadDirectory(item.url, itemPath);
+        await this.downloadDirectorySilent(item.url, itemPath);
       }
     }
   }
