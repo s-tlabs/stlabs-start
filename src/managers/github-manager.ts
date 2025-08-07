@@ -3,7 +3,7 @@ import path from 'path';
 import Handlebars from 'handlebars';
 import { promises as fsPromises } from 'fs';
 import { AuthManager } from './auth-manager';
-const degit = require('degit');
+const download = require('download-git-repo');
 
 export class GitHubManager {
   private templatesRepo = 's-tlabs/boilerplates';
@@ -16,24 +16,30 @@ export class GitHubManager {
     try {
       console.log(`🔍 Downloading template ${templateName}...`);
       
-      // Get authentication headers for private repository access
+      // Get authentication for private repository access
       const authHeaders = await this.authManager.getAuthHeaders();
       const token = authHeaders.Authorization?.replace('token ', '');
       
-      // Configure degit with authentication for private repositories
-      const degitSource = token ? `${this.templatesRepo}#main` : this.templatesRepo;
-      const emitter = degit(degitSource, {
-        cache: false,
-        force: true,
-        verbose: false
-      });
+      // Construct the repository URL with authentication
+      const repoUrl = token 
+        ? `github:${this.templatesRepo}#main`
+        : `${this.templatesRepo}#main`;
       
-      // Set GitHub token for private repository access
-      if (token) {
-        process.env.GITHUB_TOKEN = token;
-      }
-
-      await emitter.clone(tempPath);
+      // Download entire repository to temp directory
+      await new Promise((resolve, reject) => {
+        const options = token ? { 
+          clone: false,
+          headers: {
+            'Authorization': `token ${token}`,
+            'User-Agent': 'stlabs-start'
+          }
+        } : { clone: false };
+        
+        download(repoUrl, tempPath, options, (err: any) => {
+          if (err) reject(err);
+          else resolve(undefined);
+        });
+      });
       
       // Check if the specific template subdirectory exists
       const templateSourcePath = path.join(tempPath, templateName);
@@ -64,7 +70,7 @@ export class GitHubManager {
       console.log();
       console.log('💡 Troubleshooting tips:');
       console.log('• Verify the template exists in the repository');
-      console.log('• Check internet connection');
+      console.log('• Check GitHub authentication: stlabs-start auth --view');
       console.log('• Try a different template from the available list');
       
       throw new Error(`Template '${templateName}' not found or not accessible. Please check the repository and try again.`);
