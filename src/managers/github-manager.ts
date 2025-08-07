@@ -4,7 +4,7 @@ import Handlebars from 'handlebars';
 import { promises as fsPromises } from 'fs';
 import { AuthManager } from './auth-manager';
 import axios from 'axios';
-import tar from 'tar';
+const tar = require('tar');
 
 export class GitHubManager {
   private templatesRepo = 's-tlabs/boilerplates';
@@ -85,6 +85,9 @@ export class GitHubManager {
   ): Promise<void> {
     const archivePath = `${tempPath}.tar.gz`;
     const extractPath = `${tempPath}-extracted`;
+    
+    // Ensure extract directory exists
+    await fs.ensureDir(extractPath);
     
     // Extract the entire tarball
     await tar.x({
