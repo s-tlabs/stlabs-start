@@ -7,7 +7,6 @@ import { AuthManager } from './auth-manager';
 
 export class GitHubManager {
   private templatesRepo = 's-tlabs/boilerplates';
-  private tempDir = path.join(process.cwd(), '.temp');
   private authManager = new AuthManager();
 
   async downloadTemplate(templateName: string, projectName: string): Promise<void> {
@@ -57,6 +56,12 @@ export class GitHubManager {
     });
 
     for (const item of items) {
+      // Skip files that shouldn't be copied
+      if (this.shouldSkipFile(item.name)) {
+        console.log(`  ⏭️  Skipping: ${item.name}`);
+        continue;
+      }
+
       const itemPath = path.join(targetPath, item.name);
 
       if (item.type === 'file') {
@@ -136,139 +141,24 @@ export class GitHubManager {
     return binaryExtensions.includes(ext);
   }
 
-  private async createBasicTemplate(projectPath: string, templateName: string): Promise<void> {
-    // Fallback: create basic project structure
-    const templates: Record<string, () => Promise<void>> = {
-      'nextjs-nextauth-postgres': () => this.createNextJSTemplate(projectPath),
-      'nextjs-clerk-supabase': () => this.createNextJSTemplate(projectPath),
-      'nestjs-jwt-postgres': () => this.createNestJSTemplate(projectPath),
-      'react-vite-tailwind': () => this.createReactTemplate(projectPath)
-    };
+  private shouldSkipFile(fileName: string): boolean {
+    const skipFiles = [
+      '.gitignore',
+      '.git',
+      'node_modules',
+      'package-lock.json',
+      'yarn.lock',
+      'pnpm-lock.yaml',
+      '.DS_Store',
+      'Thumbs.db',
+      '.env.local',
+      '.env.example',
+      '.stlabs-cache',
+      '.stlabs-temp'
+    ];
 
-    const createTemplate = templates[templateName];
-    if (createTemplate) {
-      await createTemplate();
-    } else {
-      await this.createGenericTemplate(projectPath);
-    }
+    return skipFiles.includes(fileName) || fileName.startsWith('.stlabs-');
   }
 
-  private async createNextJSTemplate(projectPath: string): Promise<void> {
-    const packageJson = {
-      name: '{{projectName}}',
-      version: '0.1.0',
-      private: true,
-      scripts: {
-        dev: 'next dev',
-        build: 'next build',
-        start: 'next start',
-        lint: 'next lint'
-      },
-      dependencies: {
-        next: '^14.0.0',
-        react: '^18.0.0',
-        'react-dom': '^18.0.0'
-      },
-      devDependencies: {
-        '@types/node': '^20.0.0',
-        '@types/react': '^18.0.0',
-        '@types/react-dom': '^18.0.0',
-        typescript: '^5.0.0'
-      }
-    };
 
-    await fs.writeJSON(path.join(projectPath, 'package.json.hbs'), packageJson, { spaces: 2 });
-    
-    const readmeContent = `# {{projectName}}
-
-{{projectDescription}}
-
-## Getting Started
-
-\`\`\`bash
-npm install
-npm run dev
-\`\`\`
-
-## Author
-
-{{authorName}} <{{authorEmail}}>
-`;
-
-    await fs.writeFile(path.join(projectPath, 'README.md.hbs'), readmeContent);
-  }
-
-  private async createNestJSTemplate(projectPath: string): Promise<void> {
-    const packageJson = {
-      name: '{{projectName}}',
-      version: '0.0.1',
-      description: '{{projectDescription}}',
-      scripts: {
-        build: 'nest build',
-        format: 'prettier --write "src/**/*.ts" "test/**/*.ts"',
-        start: 'nest start',
-        'start:dev': 'nest start --watch',
-        'start:debug': 'nest start --debug --watch',
-        'start:prod': 'node dist/main'
-      },
-      dependencies: {
-        '@nestjs/common': '^10.0.0',
-        '@nestjs/core': '^10.0.0',
-        '@nestjs/platform-express': '^10.0.0',
-        'reflect-metadata': '^0.1.13',
-        rxjs: '^7.8.1'
-      },
-      devDependencies: {
-        '@nestjs/cli': '^10.0.0',
-        '@nestjs/schematics': '^10.0.0',
-        '@types/node': '^20.3.1',
-        typescript: '^5.1.3'
-      }
-    };
-
-    await fs.writeJSON(path.join(projectPath, 'package.json.hbs'), packageJson, { spaces: 2 });
-  }
-
-  private async createReactTemplate(projectPath: string): Promise<void> {
-    const packageJson = {
-      name: '{{projectName}}',
-      private: true,
-      version: '0.0.0',
-      type: 'module',
-      scripts: {
-        dev: 'vite',
-        build: 'tsc && vite build',
-        lint: 'eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0',
-        preview: 'vite preview'
-      },
-      dependencies: {
-        react: '^18.2.0',
-        'react-dom': '^18.2.0'
-      },
-      devDependencies: {
-        '@types/react': '^18.2.15',
-        '@types/react-dom': '^18.2.7',
-        '@vitejs/plugin-react': '^4.0.3',
-        typescript: '^5.0.2',
-        vite: '^4.4.5'
-      }
-    };
-
-    await fs.writeJSON(path.join(projectPath, 'package.json.hbs'), packageJson, { spaces: 2 });
-  }
-
-  private async createGenericTemplate(projectPath: string): Promise<void> {
-    const packageJson = {
-      name: '{{projectName}}',
-      version: '1.0.0',
-      description: '{{projectDescription}}',
-      main: 'index.js',
-      scripts: {
-        start: 'node index.js'
-      },
-      author: '{{authorName}} <{{authorEmail}}>'
-    };
-
-    await fs.writeJSON(path.join(projectPath, 'package.json.hbs'), packageJson, { spaces: 2 });
-  }
 }

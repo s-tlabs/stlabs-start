@@ -29,7 +29,7 @@ export interface TemplateConfig {
 export class TemplateManager {
   private templatesUrl = 'https://api.github.com/repos/s-tlabs/boilerplates/contents/templates.json';
   private rawUrl = 'https://raw.githubusercontent.com/s-tlabs/boilerplates/main/templates.json';
-  private cacheDir = path.join(process.cwd(), '.templates-cache');
+  private cacheDir = path.join(require('os').homedir(), '.stlabs-cache');
   private authManager = new AuthManager();
 
   async getAvailableTemplates(): Promise<Template[]> {
@@ -154,68 +154,5 @@ export class TemplateManager {
     }
   }
 
-  private getDefaultTemplates(): Template[] {
-    return [
-      {
-        key: 'nextjs-nextauth-postgres',
-        name: 'Next.js + NextAuth + PostgreSQL',
-        description: 'Fullstack app with authentication and database',
-        category: 'fullstack',
-        stack: ['nextjs', 'nextauth', 'prisma', 'postgresql', 'shadcn'],
-        features: ['Authentication', 'Database', 'UI Components', 'TypeScript'],
-        variables: {
-          required: ['nextauthSecret', 'databaseUrl'],
-          optional: ['googleClientId', 'githubClientId'],
-          generated: ['nextauthUrl']
-        },
-        supports: ['google-oauth', 'github-oauth', 'email-auth'],
-        postInstall: ['npm install', 'npx prisma generate', 'npx prisma db push']
-      },
-      {
-        key: 'nextjs-clerk-supabase',
-        name: 'Next.js + Clerk + Supabase',
-        description: 'Modern stack with Clerk authentication and Supabase backend',
-        category: 'fullstack',
-        stack: ['nextjs', 'clerk', 'supabase', 'tailwind'],
-        features: ['Authentication', 'Database', 'Real-time', 'TypeScript'],
-        variables: {
-          required: ['clerkPublishableKey', 'clerkSecretKey', 'supabaseUrl', 'supabaseAnonKey'],
-          optional: ['supabaseServiceKey'],
-          generated: []
-        },
-        supports: ['social-auth', 'email-auth'],
-        postInstall: ['npm install']
-      },
-      {
-        key: 'nestjs-jwt-postgres',
-        name: 'NestJS + JWT + PostgreSQL',
-        description: 'Backend API with JWT authentication and PostgreSQL',
-        category: 'backend',
-        stack: ['nestjs', 'jwt', 'prisma', 'postgresql'],
-        features: ['REST API', 'Authentication', 'Database', 'TypeScript'],
-        variables: {
-          required: ['jwtSecret', 'databaseUrl'],
-          optional: ['apiPort', 'corsOrigins'],
-          generated: ['apiPrefix']
-        },
-        supports: ['jwt-auth', 'swagger'],
-        postInstall: ['npm install', 'npx prisma generate']
-      },
-      {
-        key: 'react-vite-tailwind',
-        name: 'React + Vite + Tailwind',
-        description: 'Modern React frontend with Vite and Tailwind CSS',
-        category: 'frontend',
-        stack: ['react', 'vite', 'tailwind', 'typescript'],
-        features: ['Fast HMR', 'Tailwind CSS', 'TypeScript', 'ESLint'],
-        variables: {
-          required: [],
-          optional: ['apiBaseUrl'],
-          generated: []
-        },
-        supports: ['hot-reload', 'css-framework'],
-        postInstall: ['npm install']
-      }
-    ];
-  }
+
 }
