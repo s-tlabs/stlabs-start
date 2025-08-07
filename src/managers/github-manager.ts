@@ -174,7 +174,6 @@ export class GitHubManager {
 
   private shouldSkipFile(fileName: string): boolean {
     const skipFiles = [
-      '.gitignore',
       '.git',
       'node_modules',
       'package-lock.json',
@@ -182,31 +181,8 @@ export class GitHubManager {
       'pnpm-lock.yaml',
       '.DS_Store',
       'Thumbs.db',
-      '.env.local',
-      '.env.example',
       '.stlabs-cache',
-      '.stlabs-temp',
-      'package.json',
-      'tsconfig.json',
-      '.npmrc',
-      '.nvmrc',
-      '.node-version',
-      'README.md',
-      'LICENSE',
-      '.editorconfig',
-      '.prettierrc',
-      '.eslintrc',
-      'jest.config.js',
-      'webpack.config.js',
-      'vite.config.js',
-      'rollup.config.js',
-      'babel.config.js',
-      '.babelrc',
-      '.browserslistrc',
-      '.env',
-      '.env.development',
-      '.env.test',
-      '.env.production'
+      '.stlabs-temp'
     ];
 
     return skipFiles.includes(fileName) || fileName.startsWith('.stlabs-');
