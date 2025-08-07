@@ -180,10 +180,4 @@ export class GitHubManager {
     return binaryExtensions.includes(ext);
   }
 
-  private shouldSkipFile(fileName: string): boolean {
-    // No filtering - copy everything from template
-    return false;
-  }
-
-
 }
