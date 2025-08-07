@@ -4,6 +4,7 @@ import Handlebars from 'handlebars';
 import { promises as fsPromises } from 'fs';
 import { AuthManager } from './auth-manager';
 import axios from 'axios';
+import tar from 'tar';
 
 export class GitHubManager {
   private templatesRepo = 's-tlabs/boilerplates';
@@ -11,18 +12,34 @@ export class GitHubManager {
 
   async downloadTemplate(templateName: string, projectName: string): Promise<void> {
     const projectPath = path.join(process.cwd(), projectName);
+    const tempPath = path.join(process.cwd(), '.temp-' + Date.now());
     
     try {
-      console.log(`🔍 Downloading template ${templateName}...`);
+      console.log(`🔍 Downloading repository archive...`);
       
       // Get authentication headers
       const authHeaders = await this.authManager.getAuthHeaders();
       
-      // Download template directory using GitHub API
-      await this.downloadDirectoryFromGitHub(templateName, projectPath, authHeaders);
+      // Download entire repository as tarball (single request!)
+      await this.downloadRepositoryArchive(tempPath, authHeaders);
+      
+      console.log(`📁 Extracting template ${templateName}...`);
+      
+      // Extract specific template directory from the archive
+      await this.extractTemplateFromArchive(tempPath, templateName, projectPath);
+      
+      // Clean up temp files
+      await fs.remove(tempPath);
       
       console.log('✅ Template downloaded successfully');
     } catch (error) {
+      // Clean up on error
+      try {
+        await fs.remove(tempPath);
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+      
       console.error('❌ Failed to download template from GitHub');
       console.error('Error:', error instanceof Error ? error.message : String(error));
       console.log();
@@ -35,81 +52,69 @@ export class GitHubManager {
     }
   }
 
-  private async downloadDirectoryFromGitHub(
-    directoryPath: string, 
-    targetPath: string, 
-    authHeaders: any
-  ): Promise<void> {
-    // API URL for the directory contents
-    const apiUrl = `https://api.github.com/repos/${this.templatesRepo}/contents/${directoryPath}`;
+  private async downloadRepositoryArchive(tempPath: string, authHeaders: any): Promise<void> {
+    // Use GitHub's tarball API endpoint - only 1 request!
+    const archiveUrl = `https://api.github.com/repos/${this.templatesRepo}/tarball/main`;
     
-    // Configure axios with authentication
-    const axiosConfig = {
+    const response = await axios.get(archiveUrl, {
       headers: {
         ...authHeaders,
         'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'stlabs-start-cli'
-      }
-    };
+      },
+      responseType: 'stream',
+      maxRedirects: 5 // GitHub returns 302 redirect to actual download URL
+    });
 
-    try {
-      // Get directory contents
-      const response = await axios.get(apiUrl, axiosConfig);
-      const items = response.data;
-
-      if (!Array.isArray(items)) {
-        throw new Error(`'${directoryPath}' is not a directory`);
-      }
-
-      // Ensure target directory exists
-      await fs.ensureDir(targetPath);
-      
-      console.log(`📁 Found ${items.length} items in ${directoryPath}`);
-
-      // Download each item
-      for (const item of items) {
-        const itemPath = path.join(targetPath, item.name);
-        
-        if (item.type === 'file') {
-          console.log(`📄 Downloading ${item.name}...`);
-          await this.downloadFileFromGitHub(item.download_url, itemPath, axiosConfig);
-        } else if (item.type === 'dir') {
-          console.log(`📁 Processing directory ${item.name}...`);
-          await this.downloadDirectoryFromGitHub(
-            `${directoryPath}/${item.name}`, 
-            itemPath, 
-            authHeaders
-          );
-        }
-      }
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        throw new Error(`Template directory '${directoryPath}' not found in repository`);
-      }
-      throw error;
-    }
+    // Save the tarball to temp file
+    const archivePath = `${tempPath}.tar.gz`;
+    const writer = fs.createWriteStream(archivePath);
+    
+    response.data.pipe(writer);
+    
+    return new Promise((resolve, reject) => {
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
   }
 
-  private async downloadFileFromGitHub(
-    downloadUrl: string, 
-    targetPath: string, 
-    axiosConfig: any
+  private async extractTemplateFromArchive(
+    tempPath: string, 
+    templateName: string, 
+    projectPath: string
   ): Promise<void> {
-    try {
-      const response = await axios.get(downloadUrl, {
-        ...axiosConfig,
-        responseType: 'arraybuffer'
-      });
-      
-      await fs.writeFile(targetPath, response.data);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        console.warn(`⚠️  File not accessible: ${downloadUrl}`);
-        return;
-      }
-      throw new Error(`Failed to download file: ${error.message}`);
+    const archivePath = `${tempPath}.tar.gz`;
+    const extractPath = `${tempPath}-extracted`;
+    
+    // Extract the entire tarball
+    await tar.x({
+      file: archivePath,
+      cwd: extractPath,
+      strip: 1 // Remove the top-level directory (repo name)
+    });
+
+    // Find the extracted repository directory (GitHub creates a folder with repo-hash format)
+    const extractedDirs = await fs.readdir(extractPath);
+    if (extractedDirs.length === 0) {
+      throw new Error('No content found in the downloaded archive');
     }
+
+    // Look for the template directory
+    const templateSourcePath = path.join(extractPath, templateName);
+    
+    if (!(await fs.pathExists(templateSourcePath))) {
+      throw new Error(`Template directory '${templateName}' not found in repository`);
+    }
+
+    // Copy the template directory to the project path
+    await fs.ensureDir(projectPath);
+    await fs.copy(templateSourcePath, projectPath);
+    
+    // Clean up extracted files
+    await fs.remove(extractPath);
+    await fs.remove(archivePath);
   }
+
 
   async processTemplateFiles(projectPath: string, variables: Record<string, any>): Promise<void> {
     const projectDir = path.join(process.cwd(), projectPath);
