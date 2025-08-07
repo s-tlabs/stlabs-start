@@ -185,7 +185,28 @@ export class GitHubManager {
       '.env.local',
       '.env.example',
       '.stlabs-cache',
-      '.stlabs-temp'
+      '.stlabs-temp',
+      'package.json',
+      'tsconfig.json',
+      '.npmrc',
+      '.nvmrc',
+      '.node-version',
+      'README.md',
+      'LICENSE',
+      '.editorconfig',
+      '.prettierrc',
+      '.eslintrc',
+      'jest.config.js',
+      'webpack.config.js',
+      'vite.config.js',
+      'rollup.config.js',
+      'babel.config.js',
+      '.babelrc',
+      '.browserslistrc',
+      '.env',
+      '.env.development',
+      '.env.test',
+      '.env.production'
     ];
 
     return skipFiles.includes(fileName) || fileName.startsWith('.stlabs-');
