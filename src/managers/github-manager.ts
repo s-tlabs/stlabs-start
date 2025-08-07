@@ -9,25 +9,44 @@ export class GitHubManager {
 
   async downloadTemplate(templateName: string, projectName: string): Promise<void> {
     const projectPath = path.join(process.cwd(), projectName);
+    const tempPath = path.join(process.cwd(), '.temp-' + Date.now());
     
-    // Construct degit source string: user/repo/subdirectory
-    const degitSource = `${this.templatesRepo}/${templateName}`;
-
     try {
-      console.log(`🔍 Downloading template from ${degitSource}...`);
+      console.log(`🔍 Downloading template ${templateName}...`);
       
-      // Create degit instance
-      const emitter = degit(degitSource, {
-        cache: false, // Don't cache to always get latest
-        force: true,  // Overwrite existing files
+      // First, download the entire repository to a temp directory
+      const emitter = degit(this.templatesRepo, {
+        cache: false,
+        force: true,
         verbose: false
       });
 
-      // Download template to project directory
-      await emitter.clone(projectPath);
+      await emitter.clone(tempPath);
+      
+      // Check if the specific template subdirectory exists
+      const templateSourcePath = path.join(tempPath, templateName);
+      
+      if (!(await fs.pathExists(templateSourcePath))) {
+        await fs.remove(tempPath);
+        throw new Error(`Template directory '${templateName}' not found in repository`);
+      }
+      
+      // Copy the specific template directory to the project path
+      await fs.ensureDir(projectPath);
+      await fs.copy(templateSourcePath, projectPath);
+      
+      // Clean up temp directory
+      await fs.remove(tempPath);
       
       console.log('✅ Template downloaded successfully');
     } catch (error) {
+      // Clean up temp directory on error
+      try {
+        await fs.remove(tempPath);
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+      
       console.error('❌ Failed to download template from GitHub');
       console.error('Error:', error instanceof Error ? error.message : String(error));
       console.log();
