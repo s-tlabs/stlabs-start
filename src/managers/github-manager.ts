@@ -173,19 +173,13 @@ export class GitHubManager {
   }
 
   private shouldSkipFile(fileName: string): boolean {
+    // Only skip node_modules and git files
     const skipFiles = [
       '.git',
-      'node_modules',
-      'package-lock.json',
-      'yarn.lock',
-      'pnpm-lock.yaml',
-      '.DS_Store',
-      'Thumbs.db',
-      '.stlabs-cache',
-      '.stlabs-temp'
+      'node_modules'
     ];
 
-    return skipFiles.includes(fileName) || fileName.startsWith('.stlabs-');
+    return skipFiles.includes(fileName);
   }
 
 
