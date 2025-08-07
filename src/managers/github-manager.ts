@@ -181,12 +181,8 @@ export class GitHubManager {
   }
 
   private shouldSkipFile(fileName: string): boolean {
-    // Only skip git files, allow everything else from template
-    const skipFiles = [
-      '.git'
-    ];
-
-    return skipFiles.includes(fileName);
+    // No filtering - copy everything from template
+    return false;
   }
 
 
