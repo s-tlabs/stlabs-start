@@ -46,10 +46,21 @@ export class GitHubManager {
     const response = await axios.get(apiUrl, { headers });
     const items = response.data;
     
+    console.log(`🔍 Found ${items.length} items in template`);
+    items.forEach((item: any) => {
+      console.log(`  ${item.type === 'dir' ? '📁' : '📄'} ${item.name}`);
+    });
+    
     // Filter out files that should be skipped
     const validItems = items.filter((item: any) => !this.shouldSkipFile(item.name));
     
+    console.log(`📥 Will download ${validItems.length} items after filtering`);
+    validItems.forEach((item: any) => {
+      console.log(`  ✅ ${item.type === 'dir' ? '📁' : '📄'} ${item.name}`);
+    });
+    
     if (validItems.length === 0) {
+      console.log('⚠️  No items to download after filtering');
       return;
     }
 
@@ -88,11 +99,8 @@ export class GitHubManager {
     
     const response = await axios.get(apiUrl, { headers });
     const items = response.data;
-    
-    // Filter out files that should be skipped
-    const validItems = items.filter((item: any) => !this.shouldSkipFile(item.name));
 
-    for (const item of validItems) {
+    for (const item of items) {
       const itemPath = path.join(targetPath, item.name);
 
       if (item.type === 'file') {
