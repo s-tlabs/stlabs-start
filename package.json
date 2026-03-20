@@ -1,6 +1,6 @@
 {
   "name": "stlabs-start",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "CLI tool for generating projects with predefined boilerplates, organized by project categories (fullstack, backend, frontend) with intuitive navigation",
   "homepage": "https://github.com/s-tlabs/stlabs-start#readme",
   "main": "dist/index.js",
@@ -31,9 +31,6 @@
     "axios": "^1.6.2",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
-    "crypto": "^1.0.1",
-    "degit": "^2.8.4",
-    "download-git-repo": "^3.0.2",
     "fs-extra": "^11.2.0",
     "handlebars": "^4.7.8",
     "inquirer": "^9.2.12",
@@ -46,6 +43,7 @@
     "@types/jest": "^29.5.8",
     "@types/node": "^20.10.4",
     "jest": "^29.7.0",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },

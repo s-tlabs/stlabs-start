@@ -22,6 +22,8 @@ export interface Template {
   };
   supports: string[];
   postInstall: string[];
+  requirements?: string[];
+  optionalRequirements?: string[];
   variants?: Record<string, TemplateVariant>;
 }
 
@@ -46,7 +48,7 @@ export class TemplateManager {
       try {
         const cachedData = await fs.readFile(cacheFile, 'utf-8');
         const cached = JSON.parse(cachedData);
-        
+
         // Check if cache is less than 1 hour old
         const cacheAge = Date.now() - cached.timestamp;
         if (cacheAge < 3600000) { // 1 hour
@@ -57,6 +59,14 @@ export class TemplateManager {
         }
       } catch (error) {
         // Cache doesn't exist or is invalid, continue to fetch
+        if (error instanceof SyntaxError) {
+          console.warn('⚠️  Cache file is corrupt, deleting and fetching from remote...');
+          try {
+            await fs.unlink(cacheFile);
+          } catch (unlinkError) {
+            // Ignore if file doesn't exist
+          }
+        }
       }
 
       // Fetch from remote
@@ -118,23 +128,28 @@ export class TemplateManager {
       const apiUrl = `https://api.github.com/repos/s-tlabs/boilerplates/contents/${templateName}/template.json`;
       const rawUrl = `https://raw.githubusercontent.com/s-tlabs/boilerplates/main/${templateName}/template.json`;
       const headers = await this.authManager.getAuthHeaders();
-      
+
+      let config: any;
+
       try {
         // Try GitHub API first (works with private repos)
         const response = await axios.get(apiUrl, { headers });
-        
+
         if (response.data.content) {
           // Decode base64 content from GitHub API
           const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
-          return JSON.parse(content);
+          config = JSON.parse(content);
         } else {
           throw new Error('No content in API response');
         }
       } catch (apiError) {
         // Fallback to raw URL (works with public repos)
         const rawResponse = await axios.get(rawUrl, { headers });
-        return rawResponse.data;
+        config = rawResponse.data;
       }
+
+      // Validate template.json structure
+      return this.validateTemplateConfig(config, templateName);
     } catch (error) {
       // Return default config if template config not found
       return {
@@ -145,9 +160,70 @@ export class TemplateManager {
     }
   }
 
+  private validateTemplateConfig(config: any, templateName: string): TemplateConfig {
+    if (!config || typeof config !== 'object') {
+      console.warn(`⚠️  template.json for "${templateName}" is not a valid object, using defaults`);
+      return { name: templateName, prompts: [], generatedVars: {} };
+    }
+
+    // Ensure name
+    if (!config.name || typeof config.name !== 'string') {
+      config.name = templateName;
+    }
+
+    // Ensure prompts is a valid array
+    if (!Array.isArray(config.prompts)) {
+      config.prompts = [];
+    } else {
+      // Filter out malformed prompts
+      config.prompts = config.prompts.filter((p: any) => {
+        if (!p || typeof p !== 'object' || !p.name || !p.message) {
+          console.warn(`⚠️  Skipping invalid prompt in "${templateName}": missing name or message`);
+          return false;
+        }
+        const validTypes = ['input', 'password', 'confirm', 'list', 'number'];
+        if (p.type && !validTypes.includes(p.type)) {
+          console.warn(`⚠️  Skipping prompt "${p.name}" in "${templateName}": invalid type "${p.type}"`);
+          return false;
+        }
+        return true;
+      });
+    }
+
+    // Ensure conditionalPrompts is a valid object
+    if (config.conditionalPrompts && typeof config.conditionalPrompts !== 'object') {
+      console.warn(`⚠️  Invalid conditionalPrompts in "${templateName}", ignoring`);
+      config.conditionalPrompts = undefined;
+    }
+
+    // Ensure generatedVars is a valid object
+    if (config.generatedVars && typeof config.generatedVars !== 'object') {
+      console.warn(`⚠️  Invalid generatedVars in "${templateName}", ignoring`);
+      config.generatedVars = {};
+    }
+
+    return config as TemplateConfig;
+  }
+
   async validateTemplate(templateName: string): Promise<boolean> {
     const templates = await this.getAvailableTemplates();
     return templates.some(template => template.key === templateName);
+  }
+
+  async checkDuplicateTemplates(): Promise<string[]> {
+    const templates = await this.getAvailableTemplates();
+    const seen = new Map<string, number>();
+    const duplicates: string[] = [];
+
+    for (const template of templates) {
+      const count = (seen.get(template.key) || 0) + 1;
+      seen.set(template.key, count);
+      if (count === 2) {
+        duplicates.push(template.key);
+      }
+    }
+
+    return duplicates;
   }
 
   private async ensureCacheDir(): Promise<void> {

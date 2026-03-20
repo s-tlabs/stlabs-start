@@ -4,6 +4,7 @@ import Handlebars from 'handlebars';
 import { promises as fsPromises } from 'fs';
 import { AuthManager } from './auth-manager';
 import axios from 'axios';
+import ora from 'ora';
 const tar = require('tar');
 
 export class GitHubManager {
@@ -54,29 +55,73 @@ export class GitHubManager {
   }
 
   private async downloadRepositoryArchive(tempPath: string, authHeaders: any): Promise<void> {
-    // Use GitHub's tarball API endpoint - only 1 request!
-    const archiveUrl = `https://api.github.com/repos/${this.templatesRepo}/tarball/main`;
-    
-    const response = await axios.get(archiveUrl, {
-      headers: {
-        ...authHeaders,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'stlabs-start-cli'
-      },
-      responseType: 'stream',
-      maxRedirects: 5 // GitHub returns 302 redirect to actual download URL
-    });
+    const maxRetries = 3;
+    const delays = [1000, 2000]; // delays between retries
 
-    // Save the tarball to temp file
-    const archivePath = `${tempPath}.tar.gz`;
-    const writer = fs.createWriteStream(archivePath);
-    
-    response.data.pipe(writer);
-    
-    return new Promise((resolve, reject) => {
-      writer.on('finish', resolve);
-      writer.on('error', reject);
-    });
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 1) {
+          console.log(`🔄 Retry attempt ${attempt}/${maxRetries}...`);
+        }
+
+        // Use GitHub's tarball API endpoint - only 1 request!
+        const archiveUrl = `https://api.github.com/repos/${this.templatesRepo}/tarball/main`;
+
+        const response = await axios.get(archiveUrl, {
+          headers: {
+            ...authHeaders,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'stlabs-start-cli'
+          },
+          responseType: 'stream',
+          maxRedirects: 5 // GitHub returns 302 redirect to actual download URL
+        });
+
+        // Save the tarball to temp file with progress
+        const archivePath = `${tempPath}.tar.gz`;
+        const writer = fs.createWriteStream(archivePath);
+
+        const totalBytes = parseInt(response.headers['content-length'] || '0', 10);
+        let downloadedBytes = 0;
+
+        const spinner = ora('Downloading...').start();
+
+        response.data.on('data', (chunk: Buffer) => {
+          downloadedBytes += chunk.length;
+          const downloadedMB = (downloadedBytes / (1024 * 1024)).toFixed(2);
+          if (totalBytes > 0) {
+            const totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
+            const percent = ((downloadedBytes / totalBytes) * 100).toFixed(0);
+            spinner.text = `Downloading... ${downloadedMB} MB / ${totalMB} MB (${percent}%)`;
+          } else {
+            spinner.text = `Downloading... ${downloadedMB} MB`;
+          }
+        });
+
+        response.data.pipe(writer);
+
+        await new Promise<void>((resolve, reject) => {
+          writer.on('finish', () => {
+            spinner.succeed('Download complete');
+            resolve();
+          });
+          writer.on('error', (err) => {
+            spinner.fail('Download failed');
+            reject(err);
+          });
+        });
+
+        return; // Success, exit retry loop
+      } catch (error) {
+        if (attempt < maxRetries) {
+          const delay = delays[attempt - 1];
+          console.log(`⚠️  Download failed, retrying in ${delay / 1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          throw error; // All retries exhausted
+        }
+      }
+    }
   }
 
   private async extractTemplateFromArchive(

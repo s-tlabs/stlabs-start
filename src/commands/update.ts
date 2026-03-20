@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { promises as fs } from 'fs';
 import path from 'path';
+import os from 'os';
 import { TemplateManager } from '../managers/template-manager';
 
 export async function updateCommand(): Promise<void> {
@@ -13,7 +14,7 @@ export async function updateCommand(): Promise<void> {
 
   try {
     // Clear existing cache
-    const cacheDir = path.join(process.cwd(), '.templates-cache');
+    const cacheDir = path.join(os.homedir(), '.stlabs-cache');
     
     try {
       await fs.rm(cacheDir, { recursive: true, force: true });

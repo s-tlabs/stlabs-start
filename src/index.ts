@@ -6,6 +6,9 @@ import { authCommand } from './commands/auth';
 import { listCommand } from './commands/list';
 import { infoCommand } from './commands/info';
 import { updateCommand } from './commands/update';
+import { searchCommand } from './commands/search';
+import { doctorCommand } from './commands/doctor';
+import { checkForUpdates } from './utils/update-notifier';
 import chalk from 'chalk';
 
 const program = new Command();
@@ -13,7 +16,7 @@ const program = new Command();
 program
   .name('stlabs-start')
   .description('CLI tool for generating projects with predefined boilerplates')
-  .version('1.0.0');
+  .version('3.0.0');
 
 // Main create command
 program
@@ -23,6 +26,7 @@ program
   .option('-l, --list', 'List available templates')
   .option('-i, --info <template>', 'Show template information')
   .option('-u, --update', 'Update templates cache')
+  .option('-s, --search <keyword>', 'Search templates by keyword')
   .action(async (projectName, template, options) => {
     try {
       if (options.list) {
@@ -37,6 +41,11 @@ program
 
       if (options.update) {
         await updateCommand();
+        return;
+      }
+
+      if (options.search) {
+        await searchCommand(options.search);
         return;
       }
 
@@ -63,4 +72,20 @@ program
     }
   });
 
+// Doctor command
+program
+  .command('doctor')
+  .description('Check system health and configuration')
+  .action(async () => {
+    try {
+      await doctorCommand();
+    } catch (error) {
+      console.error(chalk.red('❌ Error:'), error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
+
 program.parse();
+
+// Check for updates in the background (non-blocking)
+checkForUpdates();

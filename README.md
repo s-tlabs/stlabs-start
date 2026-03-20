@@ -59,6 +59,17 @@ npx stlabs-start my-project --config config.json
 npx stlabs-start --update
 ```
 
+### System Health Check
+
+```bash
+# Check if your environment has all required tools
+npx stlabs-start doctor
+```
+
+Verifies: Node.js version, GitHub authentication, template cache, network connectivity, and repository access.
+
+Templates can also declare their own requirements (e.g. `docker`, `python`, `flutter`). When you select a template, the CLI automatically checks if the required tools are installed before proceeding.
+
 ### GitHub Authentication (for private templates)
 
 ```bash
@@ -95,10 +106,11 @@ npx stlabs-start --list
 
 ### Interactive Flow
 
-1. **Select Project Type**: Choose between Fullstack, Backend, or Frontend
+1. **Select Project Type**: Choose between Fullstack, Backend, Frontend, Mobile, and more
 2. **Choose Template**: Select from available templates for your chosen category
-3. **Configure Variables**: Set up project-specific variables
-4. **Generate Project**: Your project is created with all dependencies
+3. **Check Requirements**: Automatically verifies required system tools are installed
+4. **Configure Variables**: Set up project-specific variables
+5. **Generate Project**: Your project is created and dependencies are installed
 
 ## 📋 Available Commands
 
@@ -109,6 +121,8 @@ npx stlabs-start --list
 | `stlabs-start --info <template>` | Show template details |
 | `stlabs-start --update` | Update template cache |
 | `stlabs-start auth` | Configure GitHub authentication |
+| `stlabs-start --search <keyword>` | Search templates by keyword |
+| `stlabs-start doctor` | Check system health and dependencies |
 
 ## 🎨 Available Templates
 
@@ -154,14 +168,22 @@ npm test
 ```
 src/
 ├── commands/
-│   └── create.ts          # Main create command
+│   ├── create.ts              # Main create command
+│   ├── list.ts                # List available templates
+│   ├── info.ts                # Show template details
+│   ├── update.ts              # Update template cache
+│   ├── auth.ts                # GitHub authentication
+│   └── doctor.ts              # System health check
 ├── managers/
-│   ├── template-manager.ts # Template management
-│   ├── github-manager.ts   # GitHub operations
-│   └── config-manager.ts   # Configuration handling
+│   ├── template-manager.ts    # Template fetching & caching
+│   ├── github-manager.ts      # GitHub archive download
+│   ├── config-manager.ts      # Configuration & variables
+│   ├── auth-manager.ts        # Token management
+│   └── requirements-checker.ts # System dependency checks
 ├── utils/
-│   └── validators.ts       # Input validation
-└── index.ts               # CLI entry point
+│   └── validators.ts          # Input validation
+├── __tests__/                 # Test suites
+└── index.ts                   # CLI entry point
 ```
 
 ## Configuration
@@ -179,6 +201,55 @@ You can provide a configuration file to skip interactive prompts:
   "databaseUrl": "postgresql://user:pass@localhost:5432/myapp"
 }
 ```
+
+## CI/CD
+
+The project uses GitHub Actions for continuous integration and automated publishing.
+
+### CI Pipeline (`.github/workflows/ci.yml`)
+
+Runs automatically on every push and pull request to `main`:
+
+- **Builds and tests** across Node.js 18, 20, and 22
+- Ensures TypeScript compiles without errors
+- Runs all test suites
+
+### Automated npm Publishing (`.github/workflows/publish.yml`)
+
+Publishes to npm automatically when a GitHub Release is created:
+
+1. Builds the project
+2. Runs all tests
+3. Publishes to npm using the `NPM_TOKEN` secret
+
+#### Setup
+
+To enable automated publishing, configure the `NPM_TOKEN` secret in your GitHub repository:
+
+1. Generate an npm access token:
+   - Go to [npmjs.com](https://www.npmjs.com) → Account Settings → Access Tokens
+   - Create a new **Automation** token
+2. Add it to your GitHub repo:
+   - Go to Settings → Secrets and variables → Actions
+   - Create a new secret named `NPM_TOKEN` with the token value
+
+#### Publishing a new version
+
+```bash
+# 1. Update version in package.json and src/index.ts
+npm version patch   # or minor, or major
+
+# 2. Push the version commit and tag
+git push && git push --tags
+
+# 3. Create a Release on GitHub from the tag
+#    The publish workflow will run automatically
+```
+
+Alternatively, create a release directly from the GitHub UI:
+- Go to Releases → Draft a new release
+- Choose the tag (or create a new one)
+- Click "Publish release" → npm publish runs automatically
 
 ## 🤝 Contributing
 
