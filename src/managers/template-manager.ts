@@ -3,6 +3,11 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { AuthManager } from './auth-manager';
 
+export interface TemplateVariant {
+  name: string;
+  description: string;
+}
+
 export interface Template {
   key: string;
   name: string;
@@ -17,6 +22,7 @@ export interface Template {
   };
   supports: string[];
   postInstall: string[];
+  variants?: Record<string, TemplateVariant>;
 }
 
 export interface TemplateConfig {

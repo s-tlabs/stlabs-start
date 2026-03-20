@@ -10,27 +10,28 @@ export class GitHubManager {
   private templatesRepo = 's-tlabs/boilerplates';
   private authManager = new AuthManager();
 
-  async downloadTemplate(templateName: string, projectName: string): Promise<void> {
+  async downloadTemplate(templateName: string, projectName: string, variant?: string): Promise<void> {
     const projectPath = path.join(process.cwd(), projectName);
     const tempPath = path.join(process.cwd(), '.temp-' + Date.now());
-    
+
     try {
       console.log(`🔍 Downloading repository archive...`);
-      
+
       // Get authentication headers
       const authHeaders = await this.authManager.getAuthHeaders();
-      
+
       // Download entire repository as tarball (single request!)
       await this.downloadRepositoryArchive(tempPath, authHeaders);
-      
-      console.log(`📁 Extracting template ${templateName}...`);
-      
+
+      const sourcePath = variant ? `${templateName}/${variant}` : templateName;
+      console.log(`📁 Extracting template ${sourcePath}...`);
+
       // Extract specific template directory from the archive
-      await this.extractTemplateFromArchive(tempPath, templateName, projectPath);
-      
+      await this.extractTemplateFromArchive(tempPath, sourcePath, projectPath);
+
       // Clean up temp files
       await fs.remove(tempPath);
-      
+
       console.log('✅ Template downloaded successfully');
     } catch (error) {
       // Clean up on error
@@ -39,7 +40,7 @@ export class GitHubManager {
       } catch (cleanupError) {
         // Ignore cleanup errors
       }
-      
+
       console.error('❌ Failed to download template from GitHub');
       console.error('Error:', error instanceof Error ? error.message : String(error));
       console.log();
@@ -47,7 +48,7 @@ export class GitHubManager {
       console.log('• Verify the template exists in the repository');
       console.log('• Check GitHub authentication: stlabs-start auth --view');
       console.log('• Try a different template from the available list');
-      
+
       throw new Error(`Template '${templateName}' not found or not accessible. Please check the repository and try again.`);
     }
   }

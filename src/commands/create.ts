@@ -28,24 +28,39 @@ export async function createCommand(
     
     // Step 2: Select template
     const selectedTemplate = await selectTemplate(templateManager, templateName);
-    
+
     // Handle back option from template selection
     if (!selectedTemplate) {
       return;
     }
-    
+
+    // Step 2.5: Select variant if template has variants
+    const selectedVariant = await selectVariant(templateManager, selectedTemplate);
+
+    // Step 2.7: Select package manager (for Node.js templates)
+    const templates = await templateManager.getAvailableTemplates();
+    const templateData = templates.find(t => t.key === selectedTemplate);
+    const isNodeTemplate = templateData?.variables?.optional?.includes('packageManager');
+    const packageManager = isNodeTemplate ? await selectPackageManager() : undefined;
+
     // Step 3: Configure template variables
-    const templateConfig = await configureTemplate(templateManager, selectedTemplate, basicInfo);
-    
+    const templateConfig = await configureTemplate(
+      templateManager,
+      selectedTemplate,
+      { ...basicInfo, ...(packageManager ? { packageManager } : {}) },
+      selectedVariant
+    );
+
     // Step 4: Generate project
-    await generateProject(githubManager, selectedTemplate, templateConfig);
-    
+    await generateProject(githubManager, selectedTemplate, templateConfig, selectedVariant);
+
+    const pm = packageManager || 'npm';
     console.log();
     console.log(chalk.green.bold('✅ Project created successfully!'));
     console.log(chalk.yellow('📁 Next steps:'));
     console.log(chalk.yellow(`   cd ${basicInfo.projectName}`));
-    console.log(chalk.yellow('   npm install'));
-    console.log(chalk.yellow('   npm run dev'));
+    console.log(chalk.yellow(`   ${pm} install`));
+    console.log(chalk.yellow(`   ${pm} run dev`));
     
   } catch (error) {
     throw error;
@@ -125,21 +140,41 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
       name: 'category',
       message: '🎯 ¿Qué tipo de proyecto quieres crear?',
       choices: [
-        { 
-          name: '🚀 Fullstack - Aplicación completa (frontend + backend)', 
-          value: 'fullstack' 
+        {
+          name: '🚀 Fullstack - Aplicación completa (frontend + backend)',
+          value: 'fullstack'
         },
-        { 
-          name: '⚙️  Backend - API y servicios', 
-          value: 'backend' 
+        {
+          name: '⚙️  Backend - API y servicios',
+          value: 'backend'
         },
-        { 
-          name: '🎨 Frontend - Interfaz de usuario', 
-          value: 'frontend' 
+        {
+          name: '🎨 Frontend - Interfaz de usuario',
+          value: 'frontend'
         },
-        { 
-          name: '⬅️  Volver atrás', 
-          value: 'back' 
+        {
+          name: '📱 Mobile - Aplicaciones móviles',
+          value: 'mobile'
+        },
+        {
+          name: '🧩 Extension - Extensiones de navegador',
+          value: 'extension'
+        },
+        {
+          name: '📦 Monorepo - Proyecto multi-paquete',
+          value: 'monorepo'
+        },
+        {
+          name: '🛠️  Tooling - Herramientas CLI y utilidades',
+          value: 'tooling'
+        },
+        {
+          name: '🤖 Bot - Bots y automatizaciones',
+          value: 'bot'
+        },
+        {
+          name: '⬅️  Volver atrás',
+          value: 'back'
         }
       ]
     }
@@ -204,13 +239,60 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
   return selectedTemplate;
 }
 
+async function selectPackageManager(): Promise<string> {
+  const { pm } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'pm',
+      message: '📦 Package manager:',
+      choices: [
+        { name: 'npm', value: 'npm' },
+        { name: 'pnpm', value: 'pnpm' },
+        { name: 'yarn', value: 'yarn' },
+        { name: 'bun', value: 'bun' },
+      ],
+      default: 'npm'
+    }
+  ]);
+  return pm;
+}
+
+async function selectVariant(
+  templateManager: TemplateManager,
+  templateName: string
+): Promise<string | undefined> {
+  const templates = await templateManager.getAvailableTemplates();
+  const template = templates.find(t => t.key === templateName);
+
+  if (!template?.variants || Object.keys(template.variants).length === 0) {
+    return undefined;
+  }
+
+  const { selectedVariant } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'selectedVariant',
+      message: '🔧 Selecciona una variante:',
+      choices: Object.entries(template.variants).map(([key, variant]) => ({
+        name: `${variant.name} - ${variant.description}`,
+        value: key,
+        short: variant.name
+      }))
+    }
+  ]);
+
+  return selectedVariant;
+}
+
 async function configureTemplate(
   templateManager: TemplateManager,
   templateName: string,
-  basicInfo: any
+  basicInfo: any,
+  variant?: string
 ) {
   const spinner = ora('Loading template configuration...').start();
-  const templateConfig = await templateManager.getTemplateConfig(templateName);
+  const configPath = variant ? `${templateName}/${variant}` : templateName;
+  const templateConfig = await templateManager.getTemplateConfig(configPath);
   spinner.stop();
 
   if (!templateConfig.prompts || templateConfig.prompts.length === 0) {
@@ -281,18 +363,19 @@ async function configureTemplate(
 async function generateProject(
   githubManager: GitHubManager,
   templateName: string,
-  config: any
+  config: any,
+  variant?: string
 ) {
   const spinner = ora('Downloading template...').start();
-  
+
   try {
     // Download template from GitHub
-    await githubManager.downloadTemplate(templateName, config.projectName);
+    await githubManager.downloadTemplate(templateName, config.projectName, variant);
     spinner.text = 'Processing template files...';
-    
+
     // Process template files with variables
     await githubManager.processTemplateFiles(config.projectName, config);
-    
+
     spinner.succeed('Project generated successfully');
   } catch (error) {
     spinner.fail('Failed to generate project');
