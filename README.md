@@ -216,22 +216,26 @@ Runs automatically on every push and pull request to `main`:
 
 ### Automated npm Publishing (`.github/workflows/publish.yml`)
 
-Publishes to npm automatically when a GitHub Release is created:
+Publishes to npm automatically when a GitHub Release is created, using **OIDC Trusted Publishing** (no tokens needed):
 
 1. Builds the project
 2. Runs all tests
-3. Publishes to npm using the `NPM_TOKEN` secret
+3. Publishes to npm with provenance attestation via OIDC
 
-#### Setup
+#### Setup (one-time)
 
-To enable automated publishing, configure the `NPM_TOKEN` secret in your GitHub repository:
+Configure Trusted Publishing on npmjs.com:
 
-1. Generate an npm access token:
-   - Go to [npmjs.com](https://www.npmjs.com) → Account Settings → Access Tokens
-   - Create a new **Automation** token
-2. Add it to your GitHub repo:
-   - Go to Settings → Secrets and variables → Actions
-   - Create a new secret named `NPM_TOKEN` with the token value
+1. Go to [npmjs.com/package/stlabs-start/access](https://www.npmjs.com/package/stlabs-start/access)
+2. Under **Trusted Publishers**, click **Add trusted publisher**
+3. Fill in:
+   - **Organization/Owner**: `s-tlabs`
+   - **Repository**: `stlabs-start`
+   - **Workflow filename**: `publish.yml`
+   - **Environment**: *(leave empty)*
+4. Save
+
+No `NPM_TOKEN` secret is needed. The workflow uses OIDC to authenticate directly with npm.
 
 #### Publishing a new version
 
@@ -249,7 +253,7 @@ git push && git push --tags
 Alternatively, create a release directly from the GitHub UI:
 - Go to Releases → Draft a new release
 - Choose the tag (or create a new one)
-- Click "Publish release" → npm publish runs automatically
+- Click "Publish release" → npm publish runs automatically with provenance
 
 ## 🤝 Contributing
 

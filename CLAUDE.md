@@ -267,8 +267,10 @@ Tests are in `src/__tests__/`. Run with `npm test`.
 
 ### Publish (`.github/workflows/publish.yml`)
 - **Trigger**: GitHub Release created
-- **Steps**: `npm ci` → build → test → `npm publish`
-- **Requires**: `NPM_TOKEN` secret configured in the repo (npm Automation token)
+- **Auth**: OIDC Trusted Publishing (no NPM_TOKEN needed)
+- **Permissions**: `id-token: write`, `contents: read`
+- **Steps**: `npm ci` → build → test → `npm publish --provenance --access public`
+- **Setup**: Configure trusted publisher on npmjs.com/package/stlabs-start/access (owner: s-tlabs, repo: stlabs-start, workflow: publish.yml)
 
 ### Publishing a new version
 1. Update version in `package.json` (also update `.version()` in `src/index.ts` to match)
