@@ -170,10 +170,10 @@ export async function createCommand(
 
     // Step 6: Run postInstall commands
     if (templateData?.postInstall && templateData.postInstall.length > 0) {
-      // Filter out the base install command (already handled above)
-      const postCommands = templateData.postInstall.filter(
-        (cmd: string) => !cmd.match(/^(npm|pnpm|yarn|bun)\s+install$/)
-      );
+      // Replace {{packageManager}} in postInstall commands and filter out base install
+      const postCommands = templateData.postInstall
+        .map((cmd: string) => cmd.replace(/\{\{packageManager\}\}/g, pm))
+        .filter((cmd: string) => !cmd.match(/^(npm|pnpm|yarn|bun)\s+install$/));
 
       if (postCommands.length > 0) {
         console.log(chalk.blue('\n⚙️  Running post-install commands...'));
@@ -205,15 +205,33 @@ export async function createCommand(
       // git not available or failed - not critical
     }
 
-    console.log(chalk.yellow('\n📁 Next steps:'));
-    console.log(chalk.yellow(`   cd ${mergedInfo.projectName}`));
+    // Build the full command chain for next steps
+    const nextCommands = [`cd ${mergedInfo.projectName}`];
     if (dbConfig.dbMode === 'docker') {
-      console.log(chalk.yellow('   docker compose up -d'));
+      nextCommands.push('docker compose up -d');
     }
     if (!autoInstall) {
-      console.log(chalk.yellow(`   ${pm} install`));
+      nextCommands.push(`${pm} install`);
     }
-    console.log(chalk.yellow(`   ${pm} run dev`));
+    nextCommands.push(`${pm} run dev`);
+
+    console.log(chalk.yellow('\n📁 Next steps:'));
+    nextCommands.forEach((cmd) => console.log(chalk.yellow(`   ${cmd}`)));
+
+    // Copy the full command to clipboard for convenience
+    const fullCommand = nextCommands.join(' && ');
+    try {
+      const clipboardCmd =
+        process.platform === 'win32'
+          ? `echo ${fullCommand}| clip`
+          : process.platform === 'darwin'
+            ? `echo "${fullCommand}" | pbcopy`
+            : `echo "${fullCommand}" | xclip -selection clipboard 2>/dev/null || echo "${fullCommand}" | xsel --clipboard 2>/dev/null`;
+      execSync(clipboardCmd, { stdio: 'pipe' });
+      console.log(chalk.gray('\n📋 Command copied to clipboard! Just paste and run.'));
+    } catch (_clipError) {
+      // Clipboard not available - not critical
+    }
 
     clearPromptTimeout();
   } catch (error) {
