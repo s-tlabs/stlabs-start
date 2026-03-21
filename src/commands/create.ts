@@ -366,24 +366,36 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
   const filteredTemplates = templates.filter((template) => template.category === category);
 
   if (filteredTemplates.length === 0) {
-    console.log(chalk.red(`❌ No hay templates disponibles para la categoría "${category}"`));
-    console.log(chalk.yellow('💡 Intenta con otra categoría o verifica la conexión a internet.'));
+    // Auto-refresh cache when no templates found - likely stale cache
+    console.log(chalk.yellow('⚠️  No se encontraron templates. Actualizando cache...'));
+    await templateManager.clearCache();
+    const refreshedTemplates = await templateManager.getAvailableTemplates();
+    const retryFiltered = refreshedTemplates.filter((t) => t.category === category);
 
-    // Ask if user wants to go back
-    const { goBack } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'goBack',
-        message: '¿Quieres volver a seleccionar categoría?',
-        default: true,
-      },
-    ]);
-
-    if (goBack) {
-      return await selectTemplate(templateManager, templateName);
+    if (retryFiltered.length > 0) {
+      // Cache was stale, retry with refreshed data
+      templates.length = 0;
+      templates.push(...refreshedTemplates);
+      filteredTemplates.push(...retryFiltered);
     } else {
-      console.log(chalk.yellow('👋 ¡Hasta luego!'));
-      return;
+      console.log(chalk.red(`❌ No hay templates disponibles para la categoría "${category}"`));
+      console.log(chalk.yellow('💡 Intenta con otra categoría o verifica la conexión a internet.'));
+
+      const { goBack } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'goBack',
+          message: '¿Quieres volver a seleccionar categoría?',
+          default: true,
+        },
+      ]);
+
+      if (goBack) {
+        return await selectTemplate(templateManager, templateName);
+      } else {
+        console.log(chalk.yellow('👋 ¡Hasta luego!'));
+        return;
+      }
     }
   }
 

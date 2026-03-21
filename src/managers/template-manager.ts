@@ -50,6 +50,12 @@ export class TemplateManager {
         const cachedData = await fs.readFile(cacheFile, 'utf-8');
         const cached = JSON.parse(cachedData);
 
+        // Validate cache structure: must have templates object with at least 1 entry
+        const templateCount = cached.templates ? Object.keys(cached.templates).length : 0;
+        if (templateCount === 0) {
+          throw new Error('Cache has no templates');
+        }
+
         // Check if cache is less than 1 hour old
         const cacheAge = Date.now() - cached.timestamp;
         if (cacheAge < 3600000) {
@@ -59,15 +65,12 @@ export class TemplateManager {
             ...template,
           }));
         }
-      } catch (error) {
-        // Cache doesn't exist or is invalid, continue to fetch
-        if (error instanceof SyntaxError) {
-          console.warn('⚠️  Cache file is corrupt, deleting and fetching from remote...');
-          try {
-            await fs.unlink(cacheFile);
-          } catch (_unlinkError) {
-            // Ignore if file doesn't exist
-          }
+      } catch (_error) {
+        // Cache doesn't exist, is invalid, or has no templates - delete and re-fetch
+        try {
+          await fs.unlink(cacheFile);
+        } catch (_unlinkError) {
+          // Ignore if file doesn't exist
         }
       }
 
@@ -230,6 +233,15 @@ export class TemplateManager {
     }
 
     return duplicates;
+  }
+
+  async clearCache(): Promise<void> {
+    try {
+      const cacheFile = path.join(this.cacheDir, 'templates.json');
+      await fs.unlink(cacheFile);
+    } catch (_error) {
+      // Cache file doesn't exist, nothing to clear
+    }
   }
 
   private async ensureCacheDir(): Promise<void> {
