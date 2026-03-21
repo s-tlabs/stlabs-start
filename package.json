@@ -16,7 +16,7 @@
     "lint:fix": "eslint 'src/**/*.ts' --fix",
     "format": "prettier --write 'src/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts'",
-    "clean": "if exist dist rmdir /s /q dist",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "prepublishOnly": "npm run clean && npm run build && npm test",
     "postpublish": "echo 'Package published successfully! 🎉'",
     "prepack": "npm run build",
