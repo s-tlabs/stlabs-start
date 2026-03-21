@@ -221,13 +221,13 @@ export async function createCommand(
     // Copy the full command to clipboard for convenience
     const fullCommand = nextCommands.join(' && ');
     try {
-      const clipboardCmd =
+      const clipCmd =
         process.platform === 'win32'
-          ? `echo ${fullCommand}| clip`
+          ? 'clip'
           : process.platform === 'darwin'
-            ? `echo "${fullCommand}" | pbcopy`
-            : `echo "${fullCommand}" | xclip -selection clipboard 2>/dev/null || echo "${fullCommand}" | xsel --clipboard 2>/dev/null`;
-      execSync(clipboardCmd, { stdio: 'pipe' });
+            ? 'pbcopy'
+            : 'xclip -selection clipboard';
+      execSync(clipCmd, { input: fullCommand, stdio: ['pipe', 'pipe', 'pipe'] });
       console.log(chalk.gray('\n📋 Command copied to clipboard! Just paste and run.'));
     } catch (_clipError) {
       // Clipboard not available - not critical
