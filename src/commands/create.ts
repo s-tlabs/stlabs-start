@@ -7,6 +7,7 @@ import { execSync } from 'child_process';
 import { TemplateManager } from '../managers/template-manager';
 import { GitHubManager } from '../managers/github-manager';
 import { RequirementsChecker } from '../managers/requirements-checker';
+import { DatabaseManager } from '../managers/database-manager';
 import { validators } from '../utils/validators';
 import {
   startPromptTimeout,
@@ -87,6 +88,15 @@ export async function createCommand(
     const templateData = templates.find((t) => t.key === selectedTemplate);
     await checkRequirements(templateData);
 
+    // Step 2.8: Configure database if template uses one
+    const databaseManager = new DatabaseManager();
+    const detectedDb = databaseManager.detectDatabase(templateData?.stack || []);
+    let dbConfig: Record<string, any> = {};
+    if (detectedDb) {
+      const dbResult = await databaseManager.configure(detectedDb, mergedInfo.projectName);
+      dbConfig = { ...dbResult };
+    }
+
     // Step 2.7: Select package manager (for Node.js templates)
     const isNodeTemplate = templateData?.variables?.optional?.includes('packageManager');
     const packageManager = isNodeTemplate ? await selectPackageManager() : undefined;
@@ -95,12 +105,35 @@ export async function createCommand(
     const templateConfig = await configureTemplate(
       templateManager,
       selectedTemplate,
-      { ...mergedInfo, ...(packageManager ? { packageManager } : {}) },
+      { ...mergedInfo, ...dbConfig, ...(packageManager ? { packageManager } : {}) },
       selectedVariant
     );
 
     // Step 4: Generate project
     await generateProject(githubManager, selectedTemplate, templateConfig, selectedVariant);
+
+    // Step 4.5: Write docker-compose.yml if Docker mode was selected
+    if (dbConfig.dbMode === 'docker' && dbConfig.dockerCompose) {
+      const composePath = path.join(projectDir, 'docker-compose.yml');
+      const existingCompose = (await fs.pathExists(composePath))
+        ? await fs.readFile(composePath, 'utf-8')
+        : null;
+
+      if (existingCompose) {
+        // Append db service to existing docker-compose (add comment to distinguish)
+        const marker = '# --- stlabs-start: database service ---';
+        if (!existingCompose.includes(marker)) {
+          await fs.writeFile(
+            composePath,
+            existingCompose.trimEnd() + '\n\n' + marker + '\n' + dbConfig.dockerCompose
+          );
+          console.log(chalk.gray('📝 Database service added to existing docker-compose.yml'));
+        }
+      } else {
+        await fs.writeFile(composePath, dbConfig.dockerCompose);
+        console.log(chalk.gray('📝 docker-compose.yml created with database service'));
+      }
+    }
 
     const pm = packageManager || 'npm';
     console.log();
@@ -170,6 +203,9 @@ export async function createCommand(
 
     console.log(chalk.yellow('\n📁 Next steps:'));
     console.log(chalk.yellow(`   cd ${mergedInfo.projectName}`));
+    if (dbConfig.dbMode === 'docker') {
+      console.log(chalk.yellow('   docker compose up -d'));
+    }
     if (!autoInstall) {
       console.log(chalk.yellow(`   ${pm} install`));
     }
