@@ -24,6 +24,10 @@ export async function createCommand(
   templateName?: string,
   options: CreateOptions = {}
 ): Promise<void> {
+  // Check version and offer update if available
+  const { checkForUpdates } = require('../utils/update-notifier');
+  await checkForUpdates();
+
   console.log(chalk.blue.bold('🚀 ¡Bienvenido a STLabs Start!'));
   console.log(chalk.gray('Generador de proyectos con templates predefinidos'));
   console.log();

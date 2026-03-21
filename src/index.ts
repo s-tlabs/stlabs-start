@@ -8,7 +8,6 @@ import { infoCommand } from './commands/info';
 import { updateCommand } from './commands/update';
 import { searchCommand } from './commands/search';
 import { doctorCommand } from './commands/doctor';
-import { checkForUpdates } from './utils/update-notifier';
 import chalk from 'chalk';
 
 const program = new Command();
@@ -16,7 +15,7 @@ const program = new Command();
 program
   .name('stlabs-start')
   .description('CLI tool for generating projects with predefined boilerplates')
-  .version('3.0.0');
+  .version('3.1.0');
 
 // Main create command
 program
@@ -86,6 +85,3 @@ program
   });
 
 program.parse();
-
-// Check for updates in the background (non-blocking)
-checkForUpdates();
