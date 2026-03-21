@@ -341,6 +341,10 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
           value: 'tooling',
         },
         {
+          name: '🌐 Landing - Landing pages y sitios estáticos',
+          value: 'landing',
+        },
+        {
           name: '🤖 Bot - Bots y automatizaciones',
           value: 'bot',
         },

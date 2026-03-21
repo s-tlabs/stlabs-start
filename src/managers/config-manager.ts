@@ -124,6 +124,23 @@ export class ConfigManager {
       'react-vite-tailwind': {
         apiBaseUrl: generators.apiBaseUrl,
       },
+
+      'nextjs-landing-tailwind': {
+        // No secrets needed, purely frontend
+      },
+
+      'astro-landing-saas': {
+        // No secrets needed, purely frontend
+      },
+
+      'nextjs-landing-3d': {
+        // No secrets needed, purely frontend
+      },
+
+      'nextjs-landing-waitlist': {
+        sessionSecret: generators.sessionSecret,
+        databaseUrl: generators.databaseUrl,
+      },
     };
 
     return templateSpecific[templateName] || {};
@@ -206,6 +223,90 @@ export class ConfigManager {
           name: 'apiBaseUrl',
           message: '🌐 API Base URL (optional):',
           default: 'http://localhost:3001/api',
+        },
+      ],
+
+      'nextjs-landing-tailwind': [
+        {
+          type: 'input',
+          name: 'siteUrl',
+          message: '🌐 Site URL:',
+          default: 'http://localhost:3000',
+        },
+        {
+          type: 'confirm',
+          name: 'enableAnimations',
+          message: '✨ Enable Framer Motion animations?',
+          default: true,
+        },
+        {
+          type: 'confirm',
+          name: 'enableDarkMode',
+          message: '🌙 Enable dark mode?',
+          default: true,
+        },
+      ],
+
+      'nextjs-landing-3d': [
+        {
+          type: 'input',
+          name: 'siteUrl',
+          message: '🌐 Site URL:',
+          default: 'http://localhost:3000',
+        },
+        {
+          type: 'confirm',
+          name: 'enableDarkMode',
+          message: '🌙 Enable dark mode?',
+          default: true,
+        },
+      ],
+
+      'astro-landing-saas': [
+        {
+          type: 'input',
+          name: 'siteUrl',
+          message: '🌐 Site URL:',
+          default: 'http://localhost:4321',
+        },
+        {
+          type: 'confirm',
+          name: 'enableBlog',
+          message: '📝 Include blog section?',
+          default: false,
+        },
+        {
+          type: 'confirm',
+          name: 'enableDarkMode',
+          message: '🌙 Enable dark mode?',
+          default: true,
+        },
+      ],
+
+      'nextjs-landing-waitlist': [
+        {
+          type: 'input',
+          name: 'siteUrl',
+          message: '🌐 Site URL:',
+          default: 'http://localhost:3000',
+        },
+        {
+          type: 'input',
+          name: 'databaseUrl',
+          message: '🗄️ Database URL:',
+          default: 'postgresql://user:password@localhost:5432/{{projectName}}',
+        },
+        {
+          type: 'input',
+          name: 'resendApiKey',
+          message: '📧 Resend API Key (for emails, optional):',
+          default: '',
+        },
+        {
+          type: 'input',
+          name: 'launchDate',
+          message: '🚀 Launch date (for countdown, e.g. 2025-06-01):',
+          default: '',
         },
       ],
     };

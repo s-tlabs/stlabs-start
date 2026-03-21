@@ -4,7 +4,9 @@
       "Bash(npx tsc:*)",
       "Bash(npx jest:*)",
       "WebFetch(domain:docs.npmjs.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)"
     ]
   }
 }

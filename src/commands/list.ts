@@ -82,6 +82,7 @@ function getCategoryIcon(category: string): string {
     backend: '⚙️',
     frontend: '🎨',
     mobile: '📱',
+    landing: '🌐',
     other: '📦',
   };
   return icons[category] || icons.other;
