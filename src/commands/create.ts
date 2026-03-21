@@ -497,6 +497,18 @@ async function configureTemplate(
     return !basicInfo.hasOwnProperty(prompt.name);
   });
 
+  // Resolve string validator names to actual validator functions
+  for (const prompt of filteredPrompts) {
+    if (typeof prompt.validate === 'string') {
+      const validatorFn = (validators as Record<string, any>)[prompt.validate];
+      if (validatorFn) {
+        prompt.validate = validatorFn;
+      } else {
+        delete prompt.validate;
+      }
+    }
+  }
+
   let answers = {};
 
   if (filteredPrompts.length > 0) {
@@ -520,6 +532,17 @@ async function configureTemplate(
     for (const [condition, prompts] of Object.entries(templateConfig.conditionalPrompts)) {
       if ((answers as any)[condition]) {
         try {
+          // Resolve string validators in conditional prompts
+          for (const p of prompts) {
+            if (typeof p.validate === 'string') {
+              const validatorFn = (validators as Record<string, any>)[p.validate];
+              if (validatorFn) {
+                p.validate = validatorFn;
+              } else {
+                delete p.validate;
+              }
+            }
+          }
           const conditionalAnswers = await inquirer.prompt(prompts);
           Object.assign(answers, conditionalAnswers);
         } catch (_error) {
