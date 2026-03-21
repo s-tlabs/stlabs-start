@@ -15,7 +15,7 @@ const program = new Command();
 program
   .name('stlabs-start')
   .description('CLI tool for generating projects with predefined boilerplates')
-  .version('3.2.0');
+  .version('3.2.1');
 
 // Main create command
 program
