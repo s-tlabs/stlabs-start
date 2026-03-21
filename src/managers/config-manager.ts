@@ -26,7 +26,9 @@ export class ConfigManager {
       const configContent = await fs.readFile(configPath, 'utf-8');
       return JSON.parse(configContent);
     } catch (error) {
-      throw new Error(`Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -36,12 +38,13 @@ export class ConfigManager {
       await fs.mkdir(configDir, { recursive: true });
       await fs.writeFile(configPath, JSON.stringify(config, null, 2));
     } catch (error) {
-      throw new Error(`Failed to save configuration to ${configPath}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to save configuration to ${configPath}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
   generateVariables(templateName: string, config: any): TemplateVariables {
-    const generators = this.getVariableGenerators();
     const generated: TemplateVariables = {};
 
     // Apply global variables
@@ -75,9 +78,9 @@ export class ConfigManager {
       sessionSecret: () => crypto.randomBytes(32).toString('hex'),
 
       // URLs
-      nextauthUrl: (config) => `http://localhost:3000`,
-      apiBaseUrl: (config) => `http://localhost:3001/api`,
-      
+      nextauthUrl: (_config) => `http://localhost:3000`,
+      apiBaseUrl: (_config) => `http://localhost:3001/api`,
+
       // Database URLs
       databaseUrl: (config) => {
         const dbName = config.projectName.replace(/[^a-zA-Z0-9]/g, '_');
@@ -97,18 +100,18 @@ export class ConfigManager {
 
   private getTemplateGenerators(templateName: string): Record<string, (config: any) => any> {
     const generators = this.getVariableGenerators();
-    
+
     const templateSpecific: Record<string, Record<string, (config: any) => any>> = {
       'nextjs-nextauth-postgres': {
         nextauthSecret: generators.nextauthSecret,
         nextauthUrl: generators.nextauthUrl,
         databaseUrl: generators.databaseUrl,
       },
-      
+
       'nextjs-clerk-supabase': {
         // Clerk and Supabase keys need to be provided by user
       },
-      
+
       'nestjs-jwt-postgres': {
         jwtSecret: generators.jwtSecret,
         databaseUrl: generators.databaseUrl,
@@ -117,10 +120,10 @@ export class ConfigManager {
         corsOrigins: generators.corsOrigins,
         jwtExpiresIn: generators.jwtExpiresIn,
       },
-      
+
       'react-vite-tailwind': {
         apiBaseUrl: generators.apiBaseUrl,
-      }
+      },
     };
 
     return templateSpecific[templateName] || {};
@@ -133,78 +136,78 @@ export class ConfigManager {
           type: 'password',
           name: 'nextauthSecret',
           message: '🔐 NextAuth Secret (leave empty to auto-generate):',
-          default: ''
+          default: '',
         },
         {
           type: 'input',
           name: 'databaseUrl',
           message: '🗄️ Database URL:',
-          default: 'postgresql://user:password@localhost:5432/{{projectName}}'
+          default: 'postgresql://user:password@localhost:5432/{{projectName}}',
         },
         {
           type: 'confirm',
           name: 'enableGoogleAuth',
           message: '🔐 Enable Google OAuth?',
-          default: false
-        }
+          default: false,
+        },
       ],
-      
+
       'nextjs-clerk-supabase': [
         {
           type: 'input',
           name: 'clerkPublishableKey',
           message: '🔑 Clerk Publishable Key:',
-          validate: (input: string) => input ? true : 'Clerk Publishable Key is required'
+          validate: (input: string) => (input ? true : 'Clerk Publishable Key is required'),
         },
         {
           type: 'password',
           name: 'clerkSecretKey',
           message: '🔒 Clerk Secret Key:',
-          validate: (input: string) => input ? true : 'Clerk Secret Key is required'
+          validate: (input: string) => (input ? true : 'Clerk Secret Key is required'),
         },
         {
           type: 'input',
           name: 'supabaseUrl',
           message: '🗄️ Supabase URL:',
-          validate: (input: string) => input ? true : 'Supabase URL is required'
+          validate: (input: string) => (input ? true : 'Supabase URL is required'),
         },
         {
           type: 'password',
           name: 'supabaseAnonKey',
           message: '🔑 Supabase Anon Key:',
-          validate: (input: string) => input ? true : 'Supabase Anon Key is required'
-        }
+          validate: (input: string) => (input ? true : 'Supabase Anon Key is required'),
+        },
       ],
-      
+
       'nestjs-jwt-postgres': [
         {
           type: 'password',
           name: 'jwtSecret',
           message: '🔐 JWT Secret (leave empty to auto-generate):',
-          default: ''
+          default: '',
         },
         {
           type: 'input',
           name: 'databaseUrl',
           message: '🗄️ Database URL:',
-          default: 'postgresql://user:password@localhost:5432/{{projectName}}'
+          default: 'postgresql://user:password@localhost:5432/{{projectName}}',
         },
         {
           type: 'number',
           name: 'apiPort',
           message: '🚀 API Port:',
-          default: 3001
-        }
+          default: 3001,
+        },
       ],
-      
+
       'react-vite-tailwind': [
         {
           type: 'input',
           name: 'apiBaseUrl',
           message: '🌐 API Base URL (optional):',
-          default: 'http://localhost:3001/api'
-        }
-      ]
+          default: 'http://localhost:3001/api',
+        },
+      ],
     };
 
     return defaultPrompts[templateName] || [];
@@ -218,16 +221,18 @@ export class ConfigManager {
             type: 'input',
             name: 'googleClientId',
             message: '🔑 Google Client ID:',
-            validate: (input: string) => input ? true : 'Google Client ID is required when Google Auth is enabled'
+            validate: (input: string) =>
+              input ? true : 'Google Client ID is required when Google Auth is enabled',
           },
           {
             type: 'password',
             name: 'googleClientSecret',
             message: '🔒 Google Client Secret:',
-            validate: (input: string) => input ? true : 'Google Client Secret is required when Google Auth is enabled'
-          }
-        ]
-      }
+            validate: (input: string) =>
+              input ? true : 'Google Client Secret is required when Google Auth is enabled',
+          },
+        ],
+      },
     };
 
     return conditionalPrompts[templateName] || {};

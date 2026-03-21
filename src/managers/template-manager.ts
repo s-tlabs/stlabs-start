@@ -35,7 +35,8 @@ export interface TemplateConfig {
 }
 
 export class TemplateManager {
-  private templatesUrl = 'https://api.github.com/repos/s-tlabs/boilerplates/contents/templates.json';
+  private templatesUrl =
+    'https://api.github.com/repos/s-tlabs/boilerplates/contents/templates.json';
   private rawUrl = 'https://raw.githubusercontent.com/s-tlabs/boilerplates/main/templates.json';
   private cacheDir = path.join(require('os').homedir(), '.stlabs-cache');
   private authManager = new AuthManager();
@@ -44,17 +45,18 @@ export class TemplateManager {
     try {
       // Try to load from cache first
       const cacheFile = path.join(this.cacheDir, 'templates.json');
-      
+
       try {
         const cachedData = await fs.readFile(cacheFile, 'utf-8');
         const cached = JSON.parse(cachedData);
 
         // Check if cache is less than 1 hour old
         const cacheAge = Date.now() - cached.timestamp;
-        if (cacheAge < 3600000) { // 1 hour
+        if (cacheAge < 3600000) {
+          // 1 hour
           return Object.entries(cached.templates).map(([key, template]: [string, any]) => ({
             key,
-            ...template
+            ...template,
           }));
         }
       } catch (error) {
@@ -63,7 +65,7 @@ export class TemplateManager {
           console.warn('⚠️  Cache file is corrupt, deleting and fetching from remote...');
           try {
             await fs.unlink(cacheFile);
-          } catch (unlinkError) {
+          } catch (_unlinkError) {
             // Ignore if file doesn't exist
           }
         }
@@ -71,13 +73,13 @@ export class TemplateManager {
 
       // Fetch from remote
       const headers = await this.authManager.getAuthHeaders();
-      
+
       let templatesData;
-      
+
       try {
         // Try GitHub API first (works with private repos)
         const response = await axios.get(this.templatesUrl, { headers });
-        
+
         if (response.data.content) {
           // Decode base64 content from GitHub API
           const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
@@ -85,7 +87,7 @@ export class TemplateManager {
         } else {
           throw new Error('No content in API response');
         }
-      } catch (apiError) {
+      } catch (_apiError) {
         console.log('🔄 API failed, trying raw URL...');
         // Fallback to raw URL (works with public repos)
         const rawResponse = await axios.get(this.rawUrl, { headers });
@@ -98,14 +100,14 @@ export class TemplateManager {
         cacheFile,
         JSON.stringify({
           timestamp: Date.now(),
-          templates: templatesData.templates
+          templates: templatesData.templates,
         }),
         'utf-8'
       );
 
       return Object.entries(templatesData.templates).map(([key, template]: [string, any]) => ({
         key,
-        ...template
+        ...template,
       }));
     } catch (error) {
       // Show error and throw instead of using fallback templates
@@ -118,8 +120,10 @@ export class TemplateManager {
       console.log('• Check GitHub authentication: stlabs-start auth --view');
       console.log('• Verify repository access permissions');
       console.log('• Ensure the repository is public or you have access');
-      
-      throw new Error('Unable to fetch templates from repository. Please check the repository and authentication.');
+
+      throw new Error(
+        'Unable to fetch templates from repository. Please check the repository and authentication.'
+      );
     }
   }
 
@@ -142,7 +146,7 @@ export class TemplateManager {
         } else {
           throw new Error('No content in API response');
         }
-      } catch (apiError) {
+      } catch (_apiError) {
         // Fallback to raw URL (works with public repos)
         const rawResponse = await axios.get(rawUrl, { headers });
         config = rawResponse.data;
@@ -150,12 +154,12 @@ export class TemplateManager {
 
       // Validate template.json structure
       return this.validateTemplateConfig(config, templateName);
-    } catch (error) {
+    } catch (_error) {
       // Return default config if template config not found
       return {
         name: templateName,
         prompts: [],
-        generatedVars: {}
+        generatedVars: {},
       };
     }
   }
@@ -183,7 +187,9 @@ export class TemplateManager {
         }
         const validTypes = ['input', 'password', 'confirm', 'list', 'number'];
         if (p.type && !validTypes.includes(p.type)) {
-          console.warn(`⚠️  Skipping prompt "${p.name}" in "${templateName}": invalid type "${p.type}"`);
+          console.warn(
+            `⚠️  Skipping prompt "${p.name}" in "${templateName}": invalid type "${p.type}"`
+          );
           return false;
         }
         return true;
@@ -207,7 +213,7 @@ export class TemplateManager {
 
   async validateTemplate(templateName: string): Promise<boolean> {
     const templates = await this.getAvailableTemplates();
-    return templates.some(template => template.key === templateName);
+    return templates.some((template) => template.key === templateName);
   }
 
   async checkDuplicateTemplates(): Promise<string[]> {
@@ -229,10 +235,8 @@ export class TemplateManager {
   private async ensureCacheDir(): Promise<void> {
     try {
       await fs.mkdir(this.cacheDir, { recursive: true });
-    } catch (error) {
+    } catch (_error) {
       // Directory already exists or creation failed
     }
   }
-
-
 }

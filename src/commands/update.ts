@@ -15,11 +15,11 @@ export async function updateCommand(): Promise<void> {
   try {
     // Clear existing cache
     const cacheDir = path.join(os.homedir(), '.stlabs-cache');
-    
+
     try {
       await fs.rm(cacheDir, { recursive: true, force: true });
       spinner.text = 'Fetching latest templates...';
-    } catch (error) {
+    } catch (_error) {
       // Cache directory doesn't exist, continue
       spinner.text = 'Fetching latest templates...';
     }
@@ -27,13 +27,13 @@ export async function updateCommand(): Promise<void> {
     // Force fetch from remote by requesting templates
     // This will automatically cache the new data
     const templates = await templateManager.getAvailableTemplates();
-    
+
     spinner.succeed('Templates cache updated successfully');
     console.log();
 
     if (templates.length > 0) {
       console.log(chalk.green(`✅ Found ${templates.length} templates:`));
-      templates.forEach(template => {
+      templates.forEach((template) => {
         const categoryIcon = getCategoryIcon(template.category);
         console.log(chalk.gray(`  ${categoryIcon} ${template.key} - ${template.name}`));
       });
@@ -45,11 +45,10 @@ export async function updateCommand(): Promise<void> {
     console.log(chalk.blue('💡 You can now use:'));
     console.log(chalk.gray('  stlabs-start --list'));
     console.log(chalk.gray('  stlabs-start my-project <template-name>'));
-
   } catch (error) {
     spinner.fail('Failed to update templates cache');
     console.error(chalk.red('❌ Error:'), error instanceof Error ? error.message : String(error));
-    
+
     console.log();
     console.log(chalk.yellow('💡 Troubleshooting:'));
     console.log(chalk.gray('• Check your internet connection'));
@@ -65,7 +64,7 @@ function getCategoryIcon(category: string): string {
     backend: '⚙️',
     frontend: '🎨',
     mobile: '📱',
-    other: '📦'
+    other: '📦',
   };
   return icons[category] || icons.other;
 }

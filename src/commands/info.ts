@@ -18,13 +18,13 @@ export async function infoCommand(templateName: string): Promise<void> {
   try {
     // Get template metadata
     const templates = await templateManager.getAvailableTemplates();
-    const template = templates.find(t => t.key === templateName);
+    const template = templates.find((t) => t.key === templateName);
 
     if (!template) {
       spinner.fail(`Template "${templateName}" not found`);
       console.log();
       console.log(chalk.yellow('💡 Available templates:'));
-      templates.forEach(t => {
+      templates.forEach((t) => {
         console.log(chalk.gray(`  • ${t.key}`));
       });
       return;
@@ -43,14 +43,17 @@ export async function infoCommand(templateName: string): Promise<void> {
     // Category and Stack
     console.log(chalk.cyan('🏷️  Category:'), chalk.white(template.category));
     if (template.stack && template.stack.length > 0) {
-      console.log(chalk.cyan('⚡ Stack:'), template.stack.map(tech => chalk.blue(`[${tech}]`)).join(' '));
+      console.log(
+        chalk.cyan('⚡ Stack:'),
+        template.stack.map((tech) => chalk.blue(`[${tech}]`)).join(' ')
+      );
     }
     console.log();
 
     // Features
     if (template.features && template.features.length > 0) {
       console.log(chalk.cyan('✨ Features:'));
-      template.features.forEach(feature => {
+      template.features.forEach((feature) => {
         console.log(chalk.gray(`  • ${feature}`));
       });
       console.log();
@@ -59,7 +62,7 @@ export async function infoCommand(templateName: string): Promise<void> {
     // Supported capabilities
     if (template.supports && template.supports.length > 0) {
       console.log(chalk.cyan('🔧 Supports:'));
-      template.supports.forEach(support => {
+      template.supports.forEach((support) => {
         console.log(chalk.gray(`  • ${support}`));
       });
       console.log();
@@ -68,24 +71,24 @@ export async function infoCommand(templateName: string): Promise<void> {
     // Variables
     if (template.variables) {
       console.log(chalk.cyan('🔧 Configuration:'));
-      
+
       if (template.variables.required && template.variables.required.length > 0) {
         console.log(chalk.red('  Required variables:'));
-        template.variables.required.forEach(variable => {
+        template.variables.required.forEach((variable) => {
           console.log(chalk.gray(`    • ${variable}`));
         });
       }
 
       if (template.variables.optional && template.variables.optional.length > 0) {
         console.log(chalk.yellow('  Optional variables:'));
-        template.variables.optional.forEach(variable => {
+        template.variables.optional.forEach((variable) => {
           console.log(chalk.gray(`    • ${variable}`));
         });
       }
 
       if (template.variables.generated && template.variables.generated.length > 0) {
         console.log(chalk.green('  Auto-generated variables:'));
-        template.variables.generated.forEach(variable => {
+        template.variables.generated.forEach((variable) => {
           console.log(chalk.gray(`    • ${variable}`));
         });
       }
@@ -109,7 +112,7 @@ export async function infoCommand(templateName: string): Promise<void> {
     // Post-install commands
     if (template.postInstall && template.postInstall.length > 0) {
       console.log(chalk.cyan('🚀 Post-install commands:'));
-      template.postInstall.forEach(command => {
+      template.postInstall.forEach((command) => {
         console.log(chalk.gray(`  $ ${command}`));
       });
       console.log();
@@ -120,11 +123,10 @@ export async function infoCommand(templateName: string): Promise<void> {
     console.log(chalk.gray(`  stlabs-start my-project ${templateName}`));
     console.log(chalk.gray(`  stlabs-start my-project ${templateName} --config config.json`));
     console.log();
-
   } catch (error) {
     spinner.fail('Failed to load template information');
     console.error(chalk.red('❌ Error:'), error instanceof Error ? error.message : String(error));
-    
+
     console.log();
     console.log(chalk.yellow('💡 Troubleshooting:'));
     console.log(chalk.gray('• Check your internet connection'));
@@ -139,7 +141,7 @@ function getPromptIcon(type: string): string {
     password: '🔒',
     confirm: '❓',
     list: '📋',
-    number: '🔢'
+    number: '🔢',
   };
   return icons[type] || '❓';
 }

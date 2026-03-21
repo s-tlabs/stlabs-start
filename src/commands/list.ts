@@ -20,12 +20,17 @@ export async function listCommand(): Promise<void> {
     }
 
     // Group templates by category
-    const categories = templates.reduce((acc, template) => {
-      const category = template.category || 'other';
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(template);
-      return acc;
-    }, {} as Record<string, typeof templates>);
+    const categories = templates.reduce(
+      (acc, template) => {
+        const category = template.category || 'other';
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+        acc[category].push(template);
+        return acc;
+      },
+      {} as Record<string, typeof templates>
+    );
 
     // Display templates by category
     Object.entries(categories).forEach(([category, categoryTemplates]) => {
@@ -33,20 +38,21 @@ export async function listCommand(): Promise<void> {
       console.log(chalk.cyan.bold(`${categoryIcon} ${category.toUpperCase()}`));
       console.log();
 
-      categoryTemplates.forEach(template => {
+      categoryTemplates.forEach((template) => {
         console.log(chalk.green(`  ${template.key}`));
         console.log(chalk.gray(`    ${template.description}`));
-        
+
         // Show stack
         if (template.stack && template.stack.length > 0) {
-          const stackBadges = template.stack.map(tech => chalk.blue(`[${tech}]`)).join(' ');
+          const stackBadges = template.stack.map((tech) => chalk.blue(`[${tech}]`)).join(' ');
           console.log(`    ${stackBadges}`);
         }
 
         // Show features
         if (template.features && template.features.length > 0) {
           const featuresList = template.features.slice(0, 3).join(', ');
-          const moreFeatures = template.features.length > 3 ? ` +${template.features.length - 3} more` : '';
+          const moreFeatures =
+            template.features.length > 3 ? ` +${template.features.length - 3} more` : '';
           console.log(chalk.gray(`    Features: ${featuresList}${moreFeatures}`));
         }
 
@@ -58,11 +64,10 @@ export async function listCommand(): Promise<void> {
     console.log(chalk.gray('  stlabs-start my-project <template-name>'));
     console.log(chalk.gray('  stlabs-start --info <template-name>'));
     console.log();
-
   } catch (error) {
     spinner.fail('Failed to load templates');
     console.error(chalk.red('❌ Error:'), error instanceof Error ? error.message : String(error));
-    
+
     console.log();
     console.log(chalk.yellow('💡 Troubleshooting:'));
     console.log(chalk.gray('• Check your internet connection'));
@@ -77,7 +82,7 @@ function getCategoryIcon(category: string): string {
     backend: '⚙️',
     frontend: '🎨',
     mobile: '📱',
-    other: '📦'
+    other: '📦',
   };
   return icons[category] || icons.other;
 }

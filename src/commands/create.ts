@@ -5,11 +5,14 @@ import fs from 'fs-extra';
 import path from 'path';
 import { execSync } from 'child_process';
 import { TemplateManager } from '../managers/template-manager';
-import { ConfigManager } from '../managers/config-manager';
 import { GitHubManager } from '../managers/github-manager';
 import { RequirementsChecker } from '../managers/requirements-checker';
 import { validators } from '../utils/validators';
-import { startPromptTimeout, resetPromptTimeout, clearPromptTimeout } from '../utils/prompt-timeout';
+import {
+  startPromptTimeout,
+  resetPromptTimeout,
+  clearPromptTimeout,
+} from '../utils/prompt-timeout';
 
 export interface CreateOptions {
   config?: string;
@@ -28,7 +31,6 @@ export async function createCommand(
   startPromptTimeout();
 
   const templateManager = new TemplateManager();
-  const configManager = new ConfigManager();
   const githubManager = new GitHubManager();
 
   try {
@@ -56,8 +58,8 @@ export async function createCommand(
           type: 'confirm',
           name: 'overwrite',
           message: `⚠️  Directory "${mergedInfo.projectName}" already exists. Do you want to overwrite it?`,
-          default: false
-        }
+          default: false,
+        },
       ]);
 
       if (!overwrite) {
@@ -82,7 +84,7 @@ export async function createCommand(
 
     // Step 2.6: Check system requirements
     const templates = await templateManager.getAvailableTemplates();
-    const templateData = templates.find(t => t.key === selectedTemplate);
+    const templateData = templates.find((t) => t.key === selectedTemplate);
     await checkRequirements(templateData);
 
     // Step 2.7: Select package manager (for Node.js templates)
@@ -110,8 +112,8 @@ export async function createCommand(
         type: 'confirm',
         name: 'autoInstall',
         message: `📦 Do you want to install dependencies with ${pm}?`,
-        default: true
-      }
+        default: true,
+      },
     ]);
 
     if (autoInstall) {
@@ -119,9 +121,13 @@ export async function createCommand(
       try {
         execSync(`${pm} install`, { stdio: 'inherit', cwd: projectDir });
         installSpinner.succeed('Dependencies installed successfully');
-      } catch (installError) {
+      } catch (_installError) {
         installSpinner.fail('Failed to install dependencies');
-        console.log(chalk.yellow(`💡 You can install them manually: cd ${mergedInfo.projectName} && ${pm} install`));
+        console.log(
+          chalk.yellow(
+            `💡 You can install them manually: cd ${mergedInfo.projectName} && ${pm} install`
+          )
+        );
       }
     }
 
@@ -139,9 +145,11 @@ export async function createCommand(
           try {
             execSync(cmd, { stdio: 'pipe', cwd: projectDir });
             cmdSpinner.succeed(`Done: ${cmd}`);
-          } catch (cmdError) {
+          } catch (_cmdError) {
             cmdSpinner.warn(`Failed: ${cmd}`);
-            console.log(chalk.gray(`  You can run it manually later: cd ${mergedInfo.projectName} && ${cmd}`));
+            console.log(
+              chalk.gray(`  You can run it manually later: cd ${mergedInfo.projectName} && ${cmd}`)
+            );
           }
         }
       }
@@ -151,9 +159,12 @@ export async function createCommand(
     try {
       execSync('git init', { stdio: 'pipe', cwd: projectDir });
       execSync('git add -A', { stdio: 'pipe', cwd: projectDir });
-      execSync('git commit -m "Initial commit from stlabs-start"', { stdio: 'pipe', cwd: projectDir });
+      execSync('git commit -m "Initial commit from stlabs-start"', {
+        stdio: 'pipe',
+        cwd: projectDir,
+      });
       console.log(chalk.gray('\n📦 Git repository initialized with initial commit'));
-    } catch (gitError) {
+    } catch (_gitError) {
       // git not available or failed - not critical
     }
 
@@ -181,14 +192,14 @@ function loadConfigFile(configPath: string): Record<string, any> {
   let content: string;
   try {
     content = fs.readFileSync(resolvedPath, 'utf-8');
-  } catch (error) {
+  } catch (_error) {
     throw new Error(`Failed to read config file: ${resolvedPath}`);
   }
 
   let parsed: any;
   try {
     parsed = JSON.parse(content);
-  } catch (error) {
+  } catch (_error) {
     throw new Error(`Config file is not valid JSON: ${resolvedPath}`);
   }
 
@@ -207,7 +218,7 @@ async function getBasicInfo(projectName?: string) {
       type: 'input',
       name: 'projectName',
       message: '📦 Project name:',
-      validate: validators.projectName
+      validate: validators.projectName,
     });
   }
 
@@ -221,13 +232,13 @@ async function getBasicInfo(projectName?: string) {
       type: 'input',
       name: 'authorName',
       message: '👤 Your name:',
-      validate: validators.required
+      validate: validators.required,
     },
     {
       type: 'input',
       name: 'authorEmail',
       message: '📧 Your email:',
-      validate: validators.email
+      validate: validators.email,
     }
   );
 
@@ -237,7 +248,7 @@ async function getBasicInfo(projectName?: string) {
     projectName: projectName || answers.projectName,
     projectDescription: answers.projectDescription || '',
     authorName: answers.authorName,
-    authorEmail: answers.authorEmail
+    authorEmail: answers.authorEmail,
   };
 }
 
@@ -263,42 +274,42 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
       choices: [
         {
           name: '🚀 Fullstack - Aplicación completa (frontend + backend)',
-          value: 'fullstack'
+          value: 'fullstack',
         },
         {
           name: '⚙️  Backend - API y servicios',
-          value: 'backend'
+          value: 'backend',
         },
         {
           name: '🎨 Frontend - Interfaz de usuario',
-          value: 'frontend'
+          value: 'frontend',
         },
         {
           name: '📱 Mobile - Aplicaciones móviles',
-          value: 'mobile'
+          value: 'mobile',
         },
         {
           name: '🧩 Extension - Extensiones de navegador',
-          value: 'extension'
+          value: 'extension',
         },
         {
           name: '📦 Monorepo - Proyecto multi-paquete',
-          value: 'monorepo'
+          value: 'monorepo',
         },
         {
           name: '🛠️  Tooling - Herramientas CLI y utilidades',
-          value: 'tooling'
+          value: 'tooling',
         },
         {
           name: '🤖 Bot - Bots y automatizaciones',
-          value: 'bot'
+          value: 'bot',
         },
         {
           name: '⬅️  Volver atrás',
-          value: 'back'
-        }
-      ]
-    }
+          value: 'back',
+        },
+      ],
+    },
   ]);
 
   // Handle back option
@@ -308,22 +319,22 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
   }
 
   // Step 2: Filter templates by category
-  const filteredTemplates = templates.filter(template => template.category === category);
+  const filteredTemplates = templates.filter((template) => template.category === category);
 
   if (filteredTemplates.length === 0) {
     console.log(chalk.red(`❌ No hay templates disponibles para la categoría "${category}"`));
     console.log(chalk.yellow('💡 Intenta con otra categoría o verifica la conexión a internet.'));
-    
+
     // Ask if user wants to go back
     const { goBack } = await inquirer.prompt([
       {
         type: 'confirm',
         name: 'goBack',
         message: '¿Quieres volver a seleccionar categoría?',
-        default: true
-      }
+        default: true,
+      },
     ]);
-    
+
     if (goBack) {
       return await selectTemplate(templateManager, templateName);
     } else {
@@ -339,17 +350,17 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
       name: 'selectedTemplate',
       message: `📋 Templates disponibles para ${category}:`,
       choices: [
-        ...filteredTemplates.map(template => ({
+        ...filteredTemplates.map((template) => ({
           name: `${template.name} - ${template.description}`,
           value: template.key,
-          short: template.name
+          short: template.name,
         })),
         {
           name: '⬅️  Volver a seleccionar categoría',
-          value: 'back'
-        }
-      ]
-    }
+          value: 'back',
+        },
+      ],
+    },
   ]);
 
   // Handle back option
@@ -372,8 +383,8 @@ async function selectPackageManager(): Promise<string> {
         { name: 'yarn', value: 'yarn' },
         { name: 'bun', value: 'bun' },
       ],
-      default: 'npm'
-    }
+      default: 'npm',
+    },
   ]);
   return pm;
 }
@@ -383,7 +394,7 @@ async function selectVariant(
   templateName: string
 ): Promise<string | undefined> {
   const templates = await templateManager.getAvailableTemplates();
-  const template = templates.find(t => t.key === templateName);
+  const template = templates.find((t) => t.key === templateName);
 
   if (!template?.variants || Object.keys(template.variants).length === 0) {
     return undefined;
@@ -397,9 +408,9 @@ async function selectVariant(
       choices: Object.entries(template.variants).map(([key, variant]) => ({
         name: `${variant.name} - ${variant.description}`,
         value: key,
-        short: variant.name
-      }))
-    }
+        short: variant.name,
+      })),
+    },
   ]);
 
   return selectedVariant;
@@ -421,36 +432,36 @@ async function configureTemplate(
   }
 
   console.log(chalk.blue(`\n⚙️  Configuring ${templateConfig.name}...`));
-  
+
   // Add option to go back to template selection
   const { continueConfig } = await inquirer.prompt([
     {
       type: 'confirm',
       name: 'continueConfig',
       message: '¿Continuar con la configuración del template?',
-      default: true
-    }
+      default: true,
+    },
   ]);
-  
+
   if (!continueConfig) {
     console.log(chalk.yellow('👋 ¡Hasta luego!'));
     return;
   }
-  
+
   // Filter out prompts that ask for info we already have
-  const filteredPrompts = templateConfig.prompts.filter(prompt => {
+  const filteredPrompts = templateConfig.prompts.filter((prompt) => {
     return !basicInfo.hasOwnProperty(prompt.name);
   });
-  
+
   let answers = {};
-  
+
   if (filteredPrompts.length > 0) {
     try {
       // Validate prompt structure
-      const validPrompts = filteredPrompts.filter(prompt => {
+      const validPrompts = filteredPrompts.filter((prompt) => {
         return prompt && typeof prompt === 'object' && prompt.name && prompt.message;
       });
-      
+
       if (validPrompts.length > 0) {
         answers = await inquirer.prompt(validPrompts);
       }
@@ -459,7 +470,7 @@ async function configureTemplate(
       console.error(chalk.gray('Error:', error instanceof Error ? error.message : String(error)));
     }
   }
-  
+
   // Handle conditional prompts
   if (templateConfig.conditionalPrompts) {
     for (const [condition, prompts] of Object.entries(templateConfig.conditionalPrompts)) {
@@ -467,7 +478,7 @@ async function configureTemplate(
         try {
           const conditionalAnswers = await inquirer.prompt(prompts);
           Object.assign(answers, conditionalAnswers);
-        } catch (error) {
+        } catch (_error) {
           console.error(chalk.yellow('⚠️  Error in conditional prompts'));
         }
       }
@@ -477,7 +488,7 @@ async function configureTemplate(
   return {
     ...basicInfo,
     ...answers,
-    ...templateConfig.generatedVars
+    ...templateConfig.generatedVars,
   };
 }
 
@@ -508,7 +519,7 @@ async function generateProject(
         await fs.remove(projectDir);
         console.log(chalk.gray('Cleaned up partial project directory'));
       }
-    } catch (cleanupError) {
+    } catch (_cleanupError) {
       // Ignore cleanup errors
     }
 
@@ -533,17 +544,22 @@ async function checkRequirements(templateData: any): Promise<void> {
   console.log();
 
   if (!allOk) {
-    const missing = results.filter(r => r.required && !r.installed);
-    console.log(chalk.red(`❌ Missing ${missing.length} required dependenc${missing.length === 1 ? 'y' : 'ies'}: ${missing.map(r => r.name).join(', ')}`));
+    const missing = results.filter((r) => r.required && !r.installed);
+    console.log(
+      chalk.red(
+        `❌ Missing ${missing.length} required dependenc${missing.length === 1 ? 'y' : 'ies'}: ${missing.map((r) => r.name).join(', ')}`
+      )
+    );
     console.log();
 
     const { continueAnyway } = await inquirer.prompt([
       {
         type: 'confirm',
         name: 'continueAnyway',
-        message: '¿Quieres continuar de todas formas? El proyecto podría no funcionar correctamente.',
-        default: false
-      }
+        message:
+          '¿Quieres continuar de todas formas? El proyecto podría no funcionar correctamente.',
+        default: false,
+      },
     ]);
 
     if (!continueAnyway) {
@@ -554,4 +570,3 @@ async function checkRequirements(templateData: any): Promise<void> {
     console.log(chalk.green('✅ All requirements satisfied'));
   }
 }
-

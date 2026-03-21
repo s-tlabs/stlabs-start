@@ -150,16 +150,12 @@ const KNOWN_REQUIREMENTS: Record<string, Requirement> = {
 };
 
 export class RequirementsChecker {
-
   /**
    * Check all requirements for a template.
    * requirements: array of requirement keys (e.g. ["node", "docker", "postgresql"])
    * optionalRequirements: array of optional requirement keys
    */
-  async check(
-    requirements: string[],
-    optionalRequirements: string[] = []
-  ): Promise<CheckResult[]> {
+  async check(requirements: string[], optionalRequirements: string[] = []): Promise<CheckResult[]> {
     const allKeys = [...new Set([...requirements, ...optionalRequirements])];
     const results: CheckResult[] = [];
 
@@ -184,7 +180,9 @@ export class RequirementsChecker {
       const output = execSync(`${req.command} ${req.versionFlag}`, {
         stdio: ['pipe', 'pipe', 'pipe'],
         timeout: 10000,
-      }).toString().trim();
+      })
+        .toString()
+        .trim();
 
       // Extract version number from output
       const versionMatch = output.match(/(\d+\.\d+[\.\d]*)/);
@@ -204,7 +202,7 @@ export class RequirementsChecker {
         required,
         installUrl: req.installUrl,
       };
-    } catch (error) {
+    } catch (_error) {
       // For python, try "python" if "python3" fails (Windows)
       if (key === 'python') {
         return this.checkFallbackCommand('python', '--version', req, required);
@@ -232,7 +230,9 @@ export class RequirementsChecker {
       const output = execSync(`${command} ${versionFlag}`, {
         stdio: ['pipe', 'pipe', 'pipe'],
         timeout: 10000,
-      }).toString().trim();
+      })
+        .toString()
+        .trim();
 
       const versionMatch = output.match(/(\d+\.\d+[\.\d]*)/);
       const version = versionMatch ? versionMatch[1] : output.split('\n')[0];
@@ -259,7 +259,9 @@ export class RequirementsChecker {
       const output = execSync(`${key} --version`, {
         stdio: ['pipe', 'pipe', 'pipe'],
         timeout: 10000,
-      }).toString().trim();
+      })
+        .toString()
+        .trim();
 
       const versionMatch = output.match(/(\d+\.\d+[\.\d]*)/);
 
@@ -288,8 +290,12 @@ export class RequirementsChecker {
     for (let i = 0; i < len; i++) {
       const av = a[i] || 0;
       const bv = b[i] || 0;
-      if (av > bv) return 1;
-      if (av < bv) return -1;
+      if (av > bv) {
+        return 1;
+      }
+      if (av < bv) {
+        return -1;
+      }
     }
     return 0;
   }

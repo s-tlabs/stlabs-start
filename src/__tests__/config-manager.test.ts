@@ -32,16 +32,18 @@ describe('ConfigManager', () => {
     });
 
     it('should throw error for non-existent file', async () => {
-      await expect(configManager.loadConfig('/nonexistent/config.json'))
-        .rejects.toThrow('Failed to load configuration');
+      await expect(configManager.loadConfig('/nonexistent/config.json')).rejects.toThrow(
+        'Failed to load configuration'
+      );
     });
 
     it('should throw error for invalid JSON', async () => {
       const configPath = path.join(tmpDir, 'bad.json');
       await fs.writeFile(configPath, 'not json {{{');
 
-      await expect(configManager.loadConfig(configPath))
-        .rejects.toThrow('Failed to load configuration');
+      await expect(configManager.loadConfig(configPath)).rejects.toThrow(
+        'Failed to load configuration'
+      );
     });
   });
 
@@ -71,14 +73,16 @@ describe('ConfigManager', () => {
 
     it('should throw when a required field is missing', () => {
       const config = { projectName: 'test' };
-      expect(() => configManager.validateConfig(config, ['projectName', 'authorName']))
-        .toThrow('Required field "authorName" is missing');
+      expect(() => configManager.validateConfig(config, ['projectName', 'authorName'])).toThrow(
+        'Required field "authorName" is missing'
+      );
     });
 
     it('should throw when a required field is empty', () => {
       const config = { projectName: '' };
-      expect(() => configManager.validateConfig(config, ['projectName']))
-        .toThrow('Required field "projectName" is missing');
+      expect(() => configManager.validateConfig(config, ['projectName'])).toThrow(
+        'Required field "projectName" is missing'
+      );
     });
   });
 

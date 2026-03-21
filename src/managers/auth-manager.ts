@@ -26,7 +26,7 @@ export class AuthManager {
 
       // No auth found
       return {};
-    } catch (error) {
+    } catch (_error) {
       return {};
     }
   }
@@ -37,7 +37,9 @@ export class AuthManager {
       config.github = auth;
       await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
     } catch (error) {
-      throw new Error(`Failed to save GitHub authentication: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to save GitHub authentication: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -45,7 +47,7 @@ export class AuthManager {
     try {
       const content = await fs.readFile(this.configPath, 'utf-8');
       return JSON.parse(content);
-    } catch (error) {
+    } catch (_error) {
       // Config file doesn't exist, return empty config
       return {};
     }
@@ -56,9 +58,9 @@ export class AuthManager {
     const envToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
     if (envToken) {
       return {
-        'Authorization': `token ${envToken}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'stlabs-start-cli'
+        Authorization: `token ${envToken}`,
+        Accept: 'application/vnd.github.v3+json',
+        'User-Agent': 'stlabs-start-cli',
       };
     }
 
@@ -66,15 +68,15 @@ export class AuthManager {
     const auth = await this.getGitHubAuth();
     if (auth.token) {
       return {
-        'Authorization': `token ${auth.token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'stlabs-start-cli'
+        Authorization: `token ${auth.token}`,
+        Accept: 'application/vnd.github.v3+json',
+        'User-Agent': 'stlabs-start-cli',
       };
     }
 
     return {
-      'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'stlabs-start-cli'
+      Accept: 'application/vnd.github.v3+json',
+      'User-Agent': 'stlabs-start-cli',
     };
   }
 }

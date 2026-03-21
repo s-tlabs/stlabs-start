@@ -10,7 +10,7 @@ describe('RequirementsChecker', () => {
   describe('check', () => {
     it('should detect node as installed', async () => {
       const results = await checker.check(['node']);
-      const nodeResult = results.find(r => r.name === 'Node.js');
+      const nodeResult = results.find((r) => r.name === 'Node.js');
 
       expect(nodeResult).toBeDefined();
       expect(nodeResult!.installed).toBe(true);
@@ -20,7 +20,7 @@ describe('RequirementsChecker', () => {
 
     it('should detect git as installed', async () => {
       const results = await checker.check(['git']);
-      const gitResult = results.find(r => r.name === 'Git');
+      const gitResult = results.find((r) => r.name === 'Git');
 
       expect(gitResult).toBeDefined();
       expect(gitResult!.installed).toBe(true);
@@ -29,7 +29,7 @@ describe('RequirementsChecker', () => {
 
     it('should detect npm as installed', async () => {
       const results = await checker.check(['npm']);
-      const npmResult = results.find(r => r.name === 'npm');
+      const npmResult = results.find((r) => r.name === 'npm');
 
       expect(npmResult).toBeDefined();
       expect(npmResult!.installed).toBe(true);
@@ -43,7 +43,7 @@ describe('RequirementsChecker', () => {
 
     it('should mark optional requirements correctly', async () => {
       const results = await checker.check(['node'], ['nonexistent-tool-xyz']);
-      const optionalResult = results.find(r => r.name === 'nonexistent-tool-xyz');
+      const optionalResult = results.find((r) => r.name === 'nonexistent-tool-xyz');
 
       expect(optionalResult).toBeDefined();
       expect(optionalResult!.required).toBe(false);
@@ -56,14 +56,14 @@ describe('RequirementsChecker', () => {
 
     it('should deduplicate requirements', async () => {
       const results = await checker.check(['node', 'node']);
-      const nodeResults = results.filter(r => r.name === 'Node.js');
+      const nodeResults = results.filter((r) => r.name === 'Node.js');
       expect(nodeResults.length).toBe(1);
     });
 
     it('should check multiple requirements', async () => {
       const results = await checker.check(['node', 'git', 'npm']);
       expect(results.length).toBe(3);
-      expect(results.every(r => r.installed)).toBe(true);
+      expect(results.every((r) => r.installed)).toBe(true);
     });
   });
 

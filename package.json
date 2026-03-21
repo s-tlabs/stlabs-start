@@ -12,6 +12,10 @@
     "dev": "ts-node src/index.ts",
     "start": "node dist/index.js",
     "test": "jest --passWithNoTests",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "format": "prettier --write 'src/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts'",
     "clean": "if exist dist rmdir /s /q dist",
     "prepublishOnly": "npm run clean && npm run build && npm test",
     "postpublish": "echo 'Package published successfully! 🎉'",
@@ -43,8 +47,15 @@
     "@types/inquirer": "^9.0.7",
     "@types/jest": "^29.5.8",
     "@types/node": "^20.10.4",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
     "husky": "^9.1.7",
     "jest": "^29.7.0",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
@@ -63,5 +74,11 @@
   ],
   "engines": {
     "node": ">=16.0.0"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }

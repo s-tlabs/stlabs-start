@@ -11,7 +11,11 @@ export class GitHubManager {
   private templatesRepo = 's-tlabs/boilerplates';
   private authManager = new AuthManager();
 
-  async downloadTemplate(templateName: string, projectName: string, variant?: string): Promise<void> {
+  async downloadTemplate(
+    templateName: string,
+    projectName: string,
+    variant?: string
+  ): Promise<void> {
     const projectPath = path.join(process.cwd(), projectName);
     const tempPath = path.join(process.cwd(), '.temp-' + Date.now());
 
@@ -38,7 +42,7 @@ export class GitHubManager {
       // Clean up on error
       try {
         await fs.remove(tempPath);
-      } catch (cleanupError) {
+      } catch (_cleanupError) {
         // Ignore cleanup errors
       }
 
@@ -50,7 +54,9 @@ export class GitHubManager {
       console.log('• Check GitHub authentication: stlabs-start auth --view');
       console.log('• Try a different template from the available list');
 
-      throw new Error(`Template '${templateName}' not found or not accessible. Please check the repository and try again.`);
+      throw new Error(
+        `Template '${templateName}' not found or not accessible. Please check the repository and try again.`
+      );
     }
   }
 
@@ -70,11 +76,11 @@ export class GitHubManager {
         const response = await axios.get(archiveUrl, {
           headers: {
             ...authHeaders,
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'stlabs-start-cli'
+            Accept: 'application/vnd.github.v3+json',
+            'User-Agent': 'stlabs-start-cli',
           },
           responseType: 'stream',
-          maxRedirects: 5 // GitHub returns 302 redirect to actual download URL
+          maxRedirects: 5, // GitHub returns 302 redirect to actual download URL
         });
 
         // Save the tarball to temp file with progress
@@ -116,7 +122,7 @@ export class GitHubManager {
         if (attempt < maxRetries) {
           const delay = delays[attempt - 1];
           console.log(`⚠️  Download failed, retrying in ${delay / 1000}s...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
           throw error; // All retries exhausted
         }
@@ -125,21 +131,21 @@ export class GitHubManager {
   }
 
   private async extractTemplateFromArchive(
-    tempPath: string, 
-    templateName: string, 
+    tempPath: string,
+    templateName: string,
     projectPath: string
   ): Promise<void> {
     const archivePath = `${tempPath}.tar.gz`;
     const extractPath = `${tempPath}-extracted`;
-    
+
     // Ensure extract directory exists
     await fs.ensureDir(extractPath);
-    
+
     // Extract the entire tarball
     await tar.x({
       file: archivePath,
       cwd: extractPath,
-      strip: 1 // Remove the top-level directory (repo name)
+      strip: 1, // Remove the top-level directory (repo name)
     });
 
     // Find the extracted repository directory (GitHub creates a folder with repo-hash format)
@@ -150,7 +156,7 @@ export class GitHubManager {
 
     // Look for the template directory
     const templateSourcePath = path.join(extractPath, templateName);
-    
+
     if (!(await fs.pathExists(templateSourcePath))) {
       throw new Error(`Template directory '${templateName}' not found in repository`);
     }
@@ -158,20 +164,18 @@ export class GitHubManager {
     // Copy the template directory to the project path
     await fs.ensureDir(projectPath);
     await fs.copy(templateSourcePath, projectPath);
-    
+
     // Clean up extracted files
     await fs.remove(extractPath);
     await fs.remove(archivePath);
   }
 
-
   async processTemplateFiles(projectPath: string, variables: Record<string, any>): Promise<void> {
     const projectDir = path.join(process.cwd(), projectPath);
-    
+
     // Process all .hbs files
     await this.processDirectory(projectDir, variables);
   }
-
 
   private async processDirectory(dirPath: string, variables: Record<string, any>): Promise<void> {
     const items = await fsPromises.readdir(dirPath, { withFileTypes: true });
@@ -193,7 +197,10 @@ export class GitHubManager {
     }
   }
 
-  private async processHandlebarsFile(filePath: string, variables: Record<string, any>): Promise<void> {
+  private async processHandlebarsFile(
+    filePath: string,
+    variables: Record<string, any>
+  ): Promise<void> {
     const content = await fsPromises.readFile(filePath, 'utf-8');
     const template = Handlebars.compile(content);
     const processedContent = template(variables);
@@ -204,7 +211,10 @@ export class GitHubManager {
     await fsPromises.unlink(filePath); // Remove .hbs file
   }
 
-  private async processRegularFile(filePath: string, variables: Record<string, any>): Promise<void> {
+  private async processRegularFile(
+    filePath: string,
+    variables: Record<string, any>
+  ): Promise<void> {
     // Skip binary files
     if (this.isBinaryFile(filePath)) {
       return;
@@ -226,14 +236,27 @@ export class GitHubManager {
 
   private isBinaryFile(filePath: string): boolean {
     const binaryExtensions = [
-      '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg',
-      '.woff', '.woff2', '.ttf', '.eot',
-      '.exe', '.dll', '.so', '.dylib',
-      '.zip', '.tar', '.gz', '.rar'
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.gif',
+      '.ico',
+      '.svg',
+      '.woff',
+      '.woff2',
+      '.ttf',
+      '.eot',
+      '.exe',
+      '.dll',
+      '.so',
+      '.dylib',
+      '.zip',
+      '.tar',
+      '.gz',
+      '.rar',
     ];
 
     const ext = path.extname(filePath).toLowerCase();
     return binaryExtensions.includes(ext);
   }
-
 }

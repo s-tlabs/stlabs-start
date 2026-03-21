@@ -44,7 +44,9 @@ export async function doctorCommand(): Promise<void> {
     const label = result.ok ? chalk.green(result.label) : chalk.red(result.label);
     console.log(`  ${icon} ${label}`);
     console.log(`    ${chalk.gray(result.detail)}`);
-    if (!result.ok) allOk = false;
+    if (!result.ok) {
+      allOk = false;
+    }
   }
 
   console.log();
@@ -62,9 +64,7 @@ function checkNodeVersion(): CheckResult {
   return {
     label: 'Node.js version',
     ok,
-    detail: ok
-      ? `${version} (>= 16 required)`
-      : `${version} - Node.js 16 or higher is required`
+    detail: ok ? `${version} (>= 16 required)` : `${version} - Node.js 16 or higher is required`,
   };
 }
 
@@ -78,13 +78,13 @@ async function checkGitHubAuth(): Promise<CheckResult> {
       ok: hasToken,
       detail: hasToken
         ? 'Token configured'
-        : 'No token found. Run "stlabs-start auth --setup" or set GITHUB_TOKEN env variable'
+        : 'No token found. Run "stlabs-start auth --setup" or set GITHUB_TOKEN env variable',
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       label: 'GitHub authentication',
       ok: false,
-      detail: 'Failed to check authentication status'
+      detail: 'Failed to check authentication status',
     };
   }
 }
@@ -101,7 +101,7 @@ async function checkCacheStatus(): Promise<CheckResult> {
       return {
         label: 'Template cache',
         ok: false,
-        detail: 'Cache file exists but has no timestamp'
+        detail: 'Cache file exists but has no timestamp',
       };
     }
 
@@ -115,20 +115,20 @@ async function checkCacheStatus(): Promise<CheckResult> {
     return {
       label: 'Template cache',
       ok: true,
-      detail: `Valid cache found (last updated ${ageStr})${!fresh ? ' - cache is stale, will refresh on next use' : ''}`
+      detail: `Valid cache found (last updated ${ageStr})${!fresh ? ' - cache is stale, will refresh on next use' : ''}`,
     };
   } catch (error) {
     if (error instanceof SyntaxError) {
       return {
         label: 'Template cache',
         ok: false,
-        detail: 'Cache file is corrupt. Run "stlabs-start -u" to refresh'
+        detail: 'Cache file is corrupt. Run "stlabs-start -u" to refresh',
       };
     }
     return {
       label: 'Template cache',
       ok: true,
-      detail: 'No cache file found (will be created on first use)'
+      detail: 'No cache file found (will be created on first use)',
     };
   }
 }
@@ -137,18 +137,18 @@ async function checkNetworkConnectivity(): Promise<CheckResult> {
   try {
     await axios.get('https://api.github.com', {
       headers: { 'User-Agent': 'stlabs-start-cli' },
-      timeout: 10000
+      timeout: 10000,
     });
     return {
       label: 'Network connectivity',
       ok: true,
-      detail: 'Successfully reached api.github.com'
+      detail: 'Successfully reached api.github.com',
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       label: 'Network connectivity',
       ok: false,
-      detail: 'Cannot reach api.github.com. Check your internet connection or proxy settings'
+      detail: 'Cannot reach api.github.com. Check your internet connection or proxy settings',
     };
   }
 }
@@ -159,12 +159,12 @@ async function checkRepositoryAccess(): Promise<CheckResult> {
     const headers = await authManager.getAuthHeaders();
     const response = await axios.get('https://api.github.com/repos/s-tlabs/boilerplates', {
       headers,
-      timeout: 10000
+      timeout: 10000,
     });
     return {
       label: 'Repository access (s-tlabs/boilerplates)',
       ok: true,
-      detail: `Repository accessible (${response.data.private ? 'private' : 'public'})`
+      detail: `Repository accessible (${response.data.private ? 'private' : 'public'})`,
     };
   } catch (error: any) {
     const status = error?.response?.status;
@@ -177,7 +177,7 @@ async function checkRepositoryAccess(): Promise<CheckResult> {
     return {
       label: 'Repository access (s-tlabs/boilerplates)',
       ok: false,
-      detail
+      detail,
     };
   }
 }
@@ -191,20 +191,20 @@ async function checkDuplicateTemplates(): Promise<CheckResult> {
       return {
         label: 'Template uniqueness',
         ok: false,
-        detail: `Duplicate template keys found: ${duplicates.join(', ')}`
+        detail: `Duplicate template keys found: ${duplicates.join(', ')}`,
       };
     }
 
     return {
       label: 'Template uniqueness',
       ok: true,
-      detail: 'All template keys are unique'
+      detail: 'All template keys are unique',
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       label: 'Template uniqueness',
       ok: true,
-      detail: 'Could not check (templates not loaded)'
+      detail: 'Could not check (templates not loaded)',
     };
   }
 }

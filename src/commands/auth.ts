@@ -2,7 +2,11 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { AuthManager } from '../managers/auth-manager';
 
-export async function authCommand(options?: { view?: boolean; setup?: boolean; clear?: boolean }): Promise<void> {
+export async function authCommand(options?: {
+  view?: boolean;
+  setup?: boolean;
+  clear?: boolean;
+}): Promise<void> {
   const authManager = new AuthManager();
 
   // Handle direct options first
@@ -25,7 +29,7 @@ export async function authCommand(options?: { view?: boolean; setup?: boolean; c
   console.log(chalk.blue.bold('🔐 GitHub Authentication Setup'));
   console.log(chalk.yellow('To access private templates, you need to provide a GitHub token.'));
   console.log();
-  
+
   const { method } = await inquirer.prompt([
     {
       type: 'list',
@@ -34,9 +38,9 @@ export async function authCommand(options?: { view?: boolean; setup?: boolean; c
       choices: [
         { name: '🔑 Set GitHub Token', value: 'token' },
         { name: '📄 View current config', value: 'view' },
-        { name: '🗑️  Clear authentication', value: 'clear' }
-      ]
-    }
+        { name: '🗑️  Clear authentication', value: 'clear' },
+      ],
+    },
   ]);
 
   switch (method) {
@@ -67,18 +71,20 @@ async function setupToken(authManager: AuthManager): Promise<void> {
       name: 'token',
       message: '🔑 GitHub Token:',
       validate: (input: string) => {
-        if (!input) return 'Token is required';
+        if (!input) {
+          return 'Token is required';
+        }
         if (!input.startsWith('ghp_') && !input.startsWith('github_pat_')) {
           return 'Token should start with ghp_ or github_pat_';
         }
         return true;
-      }
+      },
     },
     {
       type: 'input',
       name: 'username',
       message: '👤 GitHub Username (optional):',
-    }
+    },
   ]);
 
   try {
@@ -86,16 +92,19 @@ async function setupToken(authManager: AuthManager): Promise<void> {
     console.log(chalk.green('✅ Authentication saved successfully!'));
     console.log(chalk.gray('Token is stored in ~/.stlabs-config.json'));
   } catch (error) {
-    console.error(chalk.red('❌ Failed to save authentication:'), error instanceof Error ? error.message : String(error));
+    console.error(
+      chalk.red('❌ Failed to save authentication:'),
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 
 async function viewConfig(authManager: AuthManager): Promise<void> {
   const auth = await authManager.getGitHubAuth();
-  
+
   console.log();
   console.log(chalk.blue('📄 Current Configuration:'));
-  
+
   if (auth.token) {
     console.log(chalk.green('✅ GitHub Token: ') + chalk.gray('***' + auth.token.slice(-4)));
     if (auth.username) {
@@ -119,8 +128,8 @@ async function clearAuth(authManager: AuthManager): Promise<void> {
       type: 'confirm',
       name: 'confirm',
       message: '🗑️  Are you sure you want to clear authentication?',
-      default: false
-    }
+      default: false,
+    },
   ]);
 
   if (confirm) {
@@ -128,7 +137,10 @@ async function clearAuth(authManager: AuthManager): Promise<void> {
       await authManager.saveGitHubAuth({});
       console.log(chalk.green('✅ Authentication cleared successfully!'));
     } catch (error) {
-      console.error(chalk.red('❌ Failed to clear authentication:'), error instanceof Error ? error.message : String(error));
+      console.error(
+        chalk.red('❌ Failed to clear authentication:'),
+        error instanceof Error ? error.message : String(error)
+      );
     }
   } else {
     console.log(chalk.gray('Operation cancelled.'));
