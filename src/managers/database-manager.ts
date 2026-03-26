@@ -122,14 +122,14 @@ export class DatabaseManager {
       {
         type: 'list',
         name: 'dbMode',
-        message: '¿Cómo quieres configurar la base de datos?',
+        message: 'How do you want to configure the database?',
         choices: [
           {
-            name: '🌐 Base de datos remota (proporcionar datos de conexión)',
+            name: '🌐 Remote database (provide connection details)',
             value: 'remote',
           },
           {
-            name: '🐳 Contenedor Docker local (auto-configurar docker-compose)',
+            name: '🐳 Local Docker container (auto-configure docker-compose)',
             value: 'docker',
           },
         ],
@@ -183,7 +183,7 @@ export class DatabaseManager {
       {
         type: 'confirm',
         name: 'dbSsl',
-        message: '🔐 ¿Usar SSL/TLS?',
+        message: '🔐 Use SSL/TLS?',
         default: true,
       },
     ]);

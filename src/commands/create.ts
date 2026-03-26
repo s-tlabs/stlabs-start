@@ -28,8 +28,8 @@ export async function createCommand(
   const { checkForUpdates } = require('../utils/update-notifier');
   await checkForUpdates();
 
-  console.log(chalk.blue.bold('🚀 ¡Bienvenido a STLabs Start!'));
-  console.log(chalk.gray('Generador de proyectos con templates predefinidos'));
+  console.log(chalk.blue.bold('🚀 Welcome to STLabs Start!'));
+  console.log(chalk.gray('Project generator with predefined templates'));
   console.log();
 
   // Start inactivity timeout
@@ -328,46 +328,46 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
     {
       type: 'list',
       name: 'category',
-      message: '🎯 ¿Qué tipo de proyecto quieres crear?',
+      message: '🎯 What type of project do you want to create?',
       choices: [
         {
-          name: '🚀 Fullstack - Aplicación completa (frontend + backend)',
+          name: '🚀 Fullstack - Complete application (frontend + backend)',
           value: 'fullstack',
         },
         {
-          name: '⚙️  Backend - API y servicios',
+          name: '⚙️  Backend - APIs and services',
           value: 'backend',
         },
         {
-          name: '🎨 Frontend - Interfaz de usuario',
+          name: '🎨 Frontend - User interface',
           value: 'frontend',
         },
         {
-          name: '📱 Mobile - Aplicaciones móviles',
+          name: '📱 Mobile - Mobile applications',
           value: 'mobile',
         },
         {
-          name: '🧩 Extension - Extensiones de navegador',
+          name: '🧩 Extension - Browser extensions',
           value: 'extension',
         },
         {
-          name: '📦 Monorepo - Proyecto multi-paquete',
+          name: '📦 Monorepo - Multi-package project',
           value: 'monorepo',
         },
         {
-          name: '🛠️  Tooling - Herramientas CLI y utilidades',
+          name: '🛠️  Tooling - CLI tools and utilities',
           value: 'tooling',
         },
         {
-          name: '🌐 Landing - Landing pages y sitios estáticos',
+          name: '🌐 Landing - Landing pages and static sites',
           value: 'landing',
         },
         {
-          name: '🤖 Bot - Bots y automatizaciones',
+          name: '🤖 Bot - Bots and automations',
           value: 'bot',
         },
         {
-          name: '⬅️  Volver atrás',
+          name: '⬅️  Go back',
           value: 'back',
         },
       ],
@@ -376,7 +376,7 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
 
   // Handle back option
   if (category === 'back') {
-    console.log(chalk.yellow('👋 ¡Hasta luego!'));
+    console.log(chalk.yellow('👋 Goodbye!'));
     return;
   }
 
@@ -385,7 +385,7 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
 
   if (filteredTemplates.length === 0) {
     // Auto-refresh cache when no templates found - likely stale cache
-    console.log(chalk.yellow('⚠️  No se encontraron templates. Actualizando cache...'));
+    console.log(chalk.yellow('⚠️  No templates found. Refreshing cache...'));
     await templateManager.clearCache();
     const refreshedTemplates = await templateManager.getAvailableTemplates();
     const retryFiltered = refreshedTemplates.filter((t) => t.category === category);
@@ -396,14 +396,14 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
       templates.push(...refreshedTemplates);
       filteredTemplates.push(...retryFiltered);
     } else {
-      console.log(chalk.red(`❌ No hay templates disponibles para la categoría "${category}"`));
-      console.log(chalk.yellow('💡 Intenta con otra categoría o verifica la conexión a internet.'));
+      console.log(chalk.red(`❌ No templates available for category "${category}"`));
+      console.log(chalk.yellow('💡 Try another category or check your internet connection.'));
 
       const { goBack } = await inquirer.prompt([
         {
           type: 'confirm',
           name: 'goBack',
-          message: '¿Quieres volver a seleccionar categoría?',
+          message: 'Do you want to go back and select another category?',
           default: true,
         },
       ]);
@@ -411,7 +411,7 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
       if (goBack) {
         return await selectTemplate(templateManager, templateName);
       } else {
-        console.log(chalk.yellow('👋 ¡Hasta luego!'));
+        console.log(chalk.yellow('👋 Goodbye!'));
         return;
       }
     }
@@ -422,7 +422,7 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
     {
       type: 'list',
       name: 'selectedTemplate',
-      message: `📋 Templates disponibles para ${category}:`,
+      message: `📋 Available templates for ${category}:`,
       choices: [
         ...filteredTemplates.map((template) => ({
           name: `${template.name} - ${template.description}`,
@@ -430,7 +430,7 @@ async function selectTemplate(templateManager: TemplateManager, templateName?: s
           short: template.name,
         })),
         {
-          name: '⬅️  Volver a seleccionar categoría',
+          name: '⬅️  Back to category selection',
           value: 'back',
         },
       ],
@@ -478,7 +478,7 @@ async function selectVariant(
     {
       type: 'list',
       name: 'selectedVariant',
-      message: '🔧 Selecciona una variante:',
+      message: '🔧 Select a variant:',
       choices: Object.entries(template.variants).map(([key, variant]) => ({
         name: `${variant.name} - ${variant.description}`,
         value: key,
@@ -512,13 +512,13 @@ async function configureTemplate(
     {
       type: 'confirm',
       name: 'continueConfig',
-      message: '¿Continuar con la configuración del template?',
+      message: 'Continue with template configuration?',
       default: true,
     },
   ]);
 
   if (!continueConfig) {
-    console.log(chalk.yellow('👋 ¡Hasta luego!'));
+    console.log(chalk.yellow('👋 Goodbye!'));
     return;
   }
 
@@ -653,8 +653,7 @@ async function checkRequirements(templateData: any): Promise<void> {
       {
         type: 'confirm',
         name: 'continueAnyway',
-        message:
-          '¿Quieres continuar de todas formas? El proyecto podría no funcionar correctamente.',
+        message: 'Do you want to continue anyway? The project may not work correctly.',
         default: false,
       },
     ]);

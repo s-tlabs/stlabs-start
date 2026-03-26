@@ -22,7 +22,7 @@ export async function checkForUpdates(): Promise<void> {
     if (latest && latest !== CURRENT_VERSION && isNewer(latest, CURRENT_VERSION)) {
       console.log(
         chalk.yellow(
-          `\n⬆️  Nueva versión disponible: ${chalk.gray(CURRENT_VERSION)} → ${chalk.green(latest)}`
+          `\n⬆️  New version available: ${chalk.gray(CURRENT_VERSION)} → ${chalk.green(latest)}`
         )
       );
 
@@ -30,21 +30,21 @@ export async function checkForUpdates(): Promise<void> {
         {
           type: 'confirm',
           name: 'shouldUpdate',
-          message: '¿Deseas actualizar ahora?',
+          message: 'Do you want to update now?',
           default: false,
         },
       ]);
 
       if (shouldUpdate) {
-        console.log(chalk.blue('Actualizando...'));
+        console.log(chalk.blue('Updating...'));
         try {
           execSync('npm install -g stlabs-start@latest', { stdio: 'inherit' });
-          console.log(chalk.green(`✅ Actualizado a v${latest}`));
-          console.log(chalk.gray('Ejecuta el comando de nuevo para usar la nueva versión.'));
+          console.log(chalk.green(`✅ Updated to v${latest}`));
+          console.log(chalk.gray('Run the command again to use the new version.'));
           process.exit(0);
         } catch (_updateError) {
-          console.log(chalk.yellow('⚠️  No se pudo actualizar automáticamente.'));
-          console.log(chalk.gray(`  Ejecuta manualmente: npm install -g stlabs-start@latest`));
+          console.log(chalk.yellow('⚠️  Could not update automatically.'));
+          console.log(chalk.gray(`  Run manually: npm install -g stlabs-start@latest`));
         }
       }
       console.log();
